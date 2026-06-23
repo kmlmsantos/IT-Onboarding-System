@@ -3,289 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enterprise HR → IT Lifecycle System</title>
+<title>Onboarding System</title>
 
 <style>
-body {
+
+/* ================= LOGIN UI ================= */
+#loginPage {
+  height: 100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background: radial-gradient(circle at top, #0b5e5e, #062c2c);
   font-family: Arial, sans-serif;
-  margin: 0;
-  background: #f4f7fa;
+}
+
+.login-card {
+  width: 340px;
+  padding: 35px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+  text-align: center;
+  color: white;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 20px;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+.login-card button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #00b3b3;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-card button:hover {
+  background: #00d1d1;
+}
+
+#error {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* ================= SYSTEM ================= */
+.hidden { display:none; }
+
+body {
+  margin:0;
+  font-family: Arial;
+  background:#f4f7fa;
 }
 
 header {
-  background: linear-gradient(135deg, #004d4d, #007a7a);
-  color: white;
-  padding: 22px;
-  text-align: center;
+  background:#007a7a;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
 }
 
 .card {
-  background: white;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
+  background:white;
+  padding:20px;
+  margin-top:15px;
+  border-radius:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
 
 .tab {
-  flex: 1;
-  padding: 12px;
-  background: #ddd;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: bold;
+  display:inline-block;
+  padding:10px;
+  margin-right:5px;
+  background:#ddd;
+  cursor:pointer;
+  border-radius:6px;
 }
 
 .tab.active {
-  background: #007a7a;
-  color: white;
+  background:#007a7a;
+  color:white;
 }
 
-h4 {
-  color: #006666;
-  border-left: 4px solid #007a7a;
-  padding-left: 10px;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 6px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+input {
+  width:100%;
+  padding:10px;
+  margin:6px 0;
 }
 
 button {
-  width: 100%;
-  padding: 12px;
-  background: #007a7a;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  width:100%;
+  padding:12px;
+  background:#007a7a;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
-
-.hidden { display:none; }
 
 .output {
-  background: #eef7f7;
-  padding: 15px;
-  border-left: 5px solid #007a7a;
-  white-space: pre-line;
-  font-size: 13px;
+  background:#eef7f7;
+  padding:15px;
+  white-space:pre-line;
+  border-left:5px solid #007a7a;
 }
+
 </style>
 </head>
 
 <body>
 
+<!-- ================= LOGIN ================= -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="logo">Onboarding System</div>
+    <div class="subtitle">Secure Access Portal</div>
+
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Sign In</button>
+    <p id="error"></p>
+  </div>
+</div>
+
+<!-- ================= SYSTEM ================= -->
+<div id="system" class="hidden">
+
 <header>
-<h2>Enterprise HR → IT Lifecycle System</h2>
-<p>Onboarding | Offboarding | Internal Transfer Automation</p>
+  <div id="roleTitle">Onboarding System</div>
+  <button onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
-<div class="card">
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('onboard')">Onboarding</div>
-  <div class="tab" onclick="switchTab('offboard')">Offboarding</div>
-  <div class="tab" onclick="switchTab('transfer')">Department Transfer</div>
-</div>
-</div>
+  <div class="card">
+    <div id="menu"></div>
+  </div>
 
-<!-- ================= ONBOARD ================= -->
-<div id="onboard" class="card">
+  <div id="onboard" class="card hidden">
+    <h3>Onboarding</h3>
+    <input id="n_name" placeholder="Full Name">
+    <input id="n_dept" placeholder="Department">
+    <button onclick="submitOnboard()">Submit</button>
+  </div>
 
-<h3>New Employee Onboarding</h3>
+  <div id="offboard" class="card hidden">
+    <h3>Offboarding</h3>
+    <input id="o_name" placeholder="Full Name">
+    <input id="o_dept" placeholder="Department">
+    <button onclick="submitOffboard()">Submit</button>
+  </div>
 
-<form id="formOnboard">
+  <div id="transfer" class="card hidden">
+    <h3>Transfer</h3>
+    <input id="t_name" placeholder="Full Name">
+    <input id="t_from" placeholder="From Dept">
+    <input id="t_to" placeholder="To Dept">
+    <button onclick="submitTransfer()">Submit</button>
+  </div>
 
-<h4>1. Employee Info</h4>
-<input id="n_name" placeholder="Full Name">
-<input id="n_contact" placeholder="Contact Number">
-<input id="n_job" placeholder="Job Title">
-<input id="n_dept" placeholder="Department">
-<input id="n_head" placeholder="Department Head">
-
-<h4>2. Email Provisioning</h4>
-<select id="n_emailReq" onchange="toggle('n_emailBox',this.value)">
-<option>NO</option><option>YES</option>
-</select>
-<div id="n_emailBox" class="hidden">
-<input id="n_email" placeholder="Email Address to Create">
-</div>
-
-<h4>3. FinPower Access</h4>
-<select id="n_finpower"><option>NO</option><option>YES</option></select>
-
-<h4>4. Network Folder Access</h4>
-<select id="n_folderReq" onchange="toggle('n_folderBox',this.value)">
-<option>NO</option><option>YES</option>
-</select>
-<div id="n_folderBox" class="hidden">
-<input id="n_folder" placeholder="Folder Name">
-</div>
-
-<h4>5. Software</h4>
-<select id="n_softReq" onchange="toggle('n_softBox',this.value)">
-<option>NO</option><option>YES</option>
-</select>
-<div id="n_softBox" class="hidden">
-<textarea id="n_soft"></textarea>
-</div>
-
-<h4>6. Notes</h4>
-<textarea id="n_notes"></textarea>
-
-<button type="submit">Generate Onboarding Record</button>
-</form>
+  <div class="card">
+    <h3>Output</h3>
+    <div id="output" class="output">No data</div>
+  </div>
 
 </div>
-
-<!-- ================= OFFBOARD ================= -->
-<div id="offboard" class="card hidden">
-
-<h3>Employee Offboarding</h3>
-
-<form id="formOffboard">
-
-<h4>Employee Info</h4>
-<input id="o_name" placeholder="Full Name">
-<input id="o_contact" placeholder="Contact Number">
-<input id="o_dept" placeholder="Department">
-
-<h4>Exit Details</h4>
-<input id="o_lastday" type="date">
-<textarea id="o_reason" placeholder="Reason for Exit"></textarea>
-
-<h4>IT Actions</h4>
-<select id="o_email"><option>Disable Email</option><option>Keep Active</option></select>
-<select id="o_fin"><option>Revoke FinPower</option><option>Keep Access</option></select>
-<select id="o_folder"><option>Remove Access</option><option>Keep Access</option></select>
-
-<textarea id="o_notes"></textarea>
-
-<button type="submit">Generate Offboarding Record</button>
-</form>
-
-</div>
-
-<!-- ================= TRANSFER ================= -->
-<div id="transfer" class="card hidden">
-
-<h3>Department Transfer / Movement</h3>
-
-<form id="formTransfer">
-
-<h4>Employee Info</h4>
-<input id="t_name" placeholder="Full Name">
-<input id="t_contact" placeholder="Contact Number">
-
-<h4>Current Department</h4>
-<input id="t_olddept" placeholder="Current Department">
-
-<h4>New Department (Moving To)</h4>
-<input id="t_newdept" placeholder="New Department / Our Department">
-
-<h4>System Updates</h4>
-<select id="t_fin"><option>Update Access</option><option>No Change</option></select>
-<select id="t_folder"><option>Update Folder Access</option><option>No Change</option></select>
-
-<textarea id="t_notes"></textarea>
-
-<button type="submit">Generate Transfer Record</button>
-</form>
-
-</div>
-
-<!-- OUTPUT -->
-<div class="card">
-<h3>IT System Output</h3>
-<div id="output" class="output">No record generated.</div>
-</div>
-
 </div>
 
 <script>
 
-function switchTab(tab){
-  document.querySelectorAll('.card form').forEach(f=>f.closest('.card').classList.add('hidden'));
-  document.getElementById('onboard').classList.add('hidden');
-  document.getElementById('offboard').classList.add('hidden');
-  document.getElementById('transfer').classList.add('hidden');
-
-  document.getElementById(tab).classList.remove('hidden');
-
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  event.target.classList.add('active');
-}
-
-function toggle(id,val){
-  document.getElementById(id).classList.toggle('hidden', val !== "YES");
-}
-
-/* ================= ONBOARD ================= */
-document.getElementById("formOnboard").onsubmit = function(e){
-e.preventDefault();
-
-let name = n_name.value;
-let username = name.split(" ")[0][0].toUpperCase()+name.split(" ").pop();
-
-output.innerText =
-`ONBOARDING REQUEST
-
-Name: ${name}
-Department: ${n_dept.value}
-Email Req: ${n_emailReq.value}
-FinPower: ${n_finpower.value}
-Folder: ${n_folderReq.value}
-Software: ${n_softReq.value}
-Notes: ${n_notes.value}`;
+/* ================= USERS ================= */
+const users = {
+  hr: { pass:"hr123", role:"HR" },
+  it: { pass:"it123", role:"IT" },
+  head: { pass:"head123", role:"Dept Head" }
 };
 
-/* OFFBOARD */
-document.getElementById("formOffboard").onsubmit = function(e){
-e.preventDefault();
+let currentRole = "";
 
-output.innerText =
-`OFFBOARDING REQUEST
+/* ================= LOGIN ================= */
+function login(){
+  const u = username.value;
+  const p = password.value;
 
+  if(users[u] && users[u].pass === p){
+    currentRole = users[u].role;
+
+    loginPage.classList.add("hidden");
+    system.classList.remove("hidden");
+
+    roleTitle.innerText = "Logged in as: " + currentRole;
+
+    loadMenu();
+  } else {
+    error.innerText = "Invalid login";
+  }
+}
+
+/* ================= MENU ================= */
+function loadMenu(){
+  menu.innerHTML = "";
+
+  if(currentRole === "HR"){
+    menu.innerHTML += `<div class="tab" onclick="show('onboard')">Onboarding</div>`;
+    menu.innerHTML += `<div class="tab" onclick="show('offboard')">Offboarding</div>`;
+  }
+
+  if(currentRole === "Dept Head"){
+    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Transfer Request</div>`;
+  }
+
+  if(currentRole === "IT"){
+    menu.innerHTML += `<div class="tab" onclick="show('transfer')">View Requests</div>`;
+  }
+}
+
+/* ================= SHOW ================= */
+function show(id){
+  onboard.classList.add("hidden");
+  offboard.classList.add("hidden");
+  transfer.classList.add("hidden");
+
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* ================= ACTIONS ================= */
+function submitOnboard(){
+  output.innerText =
+`ONBOARD REQUEST
+Name: ${n_name.value}
+Dept: ${n_dept.value}
+Role: ${currentRole}`;
+}
+
+function submitOffboard(){
+  output.innerText =
+`OFFBOARD REQUEST
 Name: ${o_name.value}
-Department: ${o_dept.value}
-Last Day: ${o_lastday.value}
-Reason: ${o_reason.value}
-Email: ${o_email.value}
-FinPower: ${o_fin.value}
-Folder: ${o_folder.value}`;
-};
+Dept: ${o_dept.value}
+Role: ${currentRole}`;
+}
 
-/* TRANSFER */
-document.getElementById("formTransfer").onsubmit = function(e){
-e.preventDefault();
-
-output.innerText =
-`DEPARTMENT TRANSFER
-
+function submitTransfer(){
+  output.innerText =
+`TRANSFER REQUEST
 Name: ${t_name.value}
-From: ${t_olddept.value}
-To: ${t_newdept.value}
-FinPower: ${t_fin.value}
-Folder: ${t_folder.value}`;
-};
+From: ${t_from.value}
+To: ${t_to.value}
+Role: ${currentRole}`;
+}
+
+/* ================= LOGOUT ================= */
+function logout(){
+  location.reload();
+}
 
 </script>
 
