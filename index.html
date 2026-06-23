@@ -20,18 +20,17 @@ body{margin:0;background:#eef3f7;}
 
 .login-card{
   width:320px;
-  padding:28px;
-  border-radius:14px;
+  padding:25px;
+  border-radius:12px;
   background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(14px);
+  backdrop-filter:blur(12px);
   color:white;
   text-align:center;
-  box-shadow:0 15px 40px rgba(0,0,0,0.3);
 }
 
 .login-card input{
   width:100%;
-  padding:11px;
+  padding:10px;
   margin:6px 0;
   border:none;
   border-radius:8px;
@@ -39,19 +38,12 @@ body{margin:0;background:#eef3f7;}
 
 .login-card button{
   width:100%;
-  padding:11px;
+  padding:10px;
   margin-top:10px;
   border:none;
   border-radius:8px;
   background:#00b3b3;
   color:white;
-  cursor:pointer;
-}
-
-#error{
-  font-size:12px;
-  color:#ffb3b3;
-  margin-top:8px;
 }
 
 /* SYSTEM */
@@ -63,12 +55,10 @@ header{
   padding:12px 18px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  font-size:14px;
 }
 
 .container{
-  max-width:950px;
+  max-width:1000px;
   margin:auto;
   padding:20px;
 }
@@ -78,26 +68,22 @@ header{
   padding:18px;
   margin-top:14px;
   border-radius:12px;
-  box-shadow:0 4px 14px rgba(0,0,0,0.05);
 }
 
-/* TABS */
 .tab{
   display:inline-block;
   padding:8px 12px;
   margin-right:6px;
-  background:#e0e0e0;
+  background:#ddd;
   border-radius:8px;
   cursor:pointer;
-  font-size:13px;
 }
 
 .tab.active{background:#28a745;color:white;}
 
-/* FORM */
 label{
   font-size:12px;
-  font-weight:600;
+  font-weight:bold;
   display:block;
   margin-top:10px;
 }
@@ -108,24 +94,22 @@ input,select,textarea{
   margin-top:5px;
   border:1px solid #ddd;
   border-radius:8px;
-  font-size:13px;
 }
 
-textarea{height:70px;resize:none;}
+textarea{height:70px;}
 
-/* BUTTON */
-button{
-  width:100%;
-  padding:11px;
-  margin-top:14px;
-  border:none;
+.helper{
+  font-size:12px;
+  color:#666;
+  margin-top:4px;
+}
+
+.box{
+  background:#f8f9fa;
+  padding:10px;
   border-radius:8px;
-  background:#007a7a;
-  color:white;
-  cursor:pointer;
+  margin-top:5px;
 }
-
-button:hover{background:#005f5f;}
 
 /* POPUP */
 #popup{
@@ -146,11 +130,11 @@ button:hover{background:#005f5f;}
 <!-- LOGIN -->
 <div id="loginPage">
   <div class="login-card">
-    <h2>HR System Login</h2>
+    <h2>HR System</h2>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
-    <div id="error"></div>
+    <div id="error" style="color:#ffb3b3;font-size:12px;"></div>
   </div>
 </div>
 
@@ -173,7 +157,7 @@ button:hover{background:#005f5f;}
 
 <!-- ================= ONBOARD ================= -->
 <div id="onboard" class="card">
-<h3>Employee Onboarding</h3>
+<h3>Onboarding</h3>
 
 <label>Full Name</label>
 <input id="n_name">
@@ -188,77 +172,59 @@ button:hover{background:#005f5f;}
 <input id="n_start" type="date">
 
 <!-- EMAIL -->
-<label>Email Account Required?</label>
-<select id="n_email" onchange="toggleEmailBox()">
+<label>Email Required?</label>
+<select id="n_email" onchange="toggleEmail()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
-  <div style="font-size:12px;color:#666;margin-bottom:6px;">
-    ✉ Enter company email to be created
-  </div>
-  <input id="n_email_address" placeholder="e.g. john.smith@company.com">
-
-  <div style="font-size:12px;color:#666;margin-top:8px;">
-
-
-<!-- FINPOWER -->
-<label>Finpower Access</label>
-<select id="n_finpower">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<!-- APPS -->
-<label>Additional Apps Required?</label>
-<select id="n_apps" onchange="toggleAppsBox()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="appsBox" style="display:none;">
-  <label>Apps List</label>
-  <textarea id="n_app_list"></textarea>
-
-  <label>Reason</label>
-  <textarea id="n_app_reason"></textarea>
-
-  <label>Email Justification</label>
-  <textarea id="n_app_email_reason"></textarea>
+<div id="emailBox" class="box" style="display:none;">
+  <div class="helper">✉ Which email should IT create?</div>
+  <input id="n_email_address" placeholder="john.smith@company.com">
 </div>
 
-<!-- NETWORK SHARE -->
+<!-- NETWORK SHARE FIXED -->
 <label>Network Share Folder Required?</label>
-<select id="n_share" onchange="toggleOnboardShare()">
+<select id="n_share" onchange="toggleShare()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="n_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
-  <div style="font-size:12px;color:#666;">
-    📁 Enter folder path for IT provisioning
-  </div>
+<div id="shareBox" class="box" style="display:none;">
 
-  <input id="n_share_folder" placeholder="/Departments/HR/EmployeeName">
+  <div class="helper">📁 Network Share Folder Access Request</div>
 
-  <div style="font-size:12px;color:#666;margin-top:8px;">
-    🔐 Access Level
-  </div>
+  <label>Folder Path to Create / Access</label>
+  <input id="n_share_folder" placeholder="/Departments/HR/JohnSmith">
 
+  <label>Access Type</label>
   <select id="n_share_access">
     <option>Read Only</option>
     <option>Read / Write</option>
     <option>Full Control</option>
   </select>
 
-  <textarea id="n_share_reason" placeholder="Reason for access"></textarea>
+</div>
+
+<!-- APPS -->
+<label>Additional Applications Required?</label>
+<select id="n_apps" onchange="toggleApps()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="appsBox" class="box" style="display:none;">
+  <div class="helper">🧩 Applications Required</div>
+  <textarea id="n_app_list" placeholder="SAP, VPN, Outlook..."></textarea>
+
+  <div class="helper">📌 Reason</div>
+  <textarea id="n_app_reason"></textarea>
 </div>
 
 <label>Notes</label>
 <textarea id="n_notes"></textarea>
 
-<button onclick="save('onboard')">Submit</button>
+<button onclick="save()">Submit</button>
 </div>
 
 <!-- ================= OFFBOARD ================= -->
@@ -275,14 +241,16 @@ button:hover{background:#005f5f;}
   <option>Contract End</option>
 </select>
 
-<button onclick="save('offboard')">Submit</button>
+<textarea id="o_notes"></textarea>
+
+<button onclick="save()">Submit</button>
 </div>
 
 <!-- ================= TRANSFER ================= -->
 <div id="transfer" class="card hidden">
-<h3>Employee Transfer</h3>
+<h3>Transfer</h3>
 
-<label>Name</label>
+<label>Full Name</label>
 <input id="t_name">
 
 <label>From Department</label>
@@ -291,47 +259,41 @@ button:hover{background:#005f5f;}
 <label>To Department</label>
 <input id="t_to">
 
-<label>Job Title</label>
-<input id="t_title">
-
-<label>Effective Date</label>
-<input id="t_date" type="date">
-
 <label>Email Required?</label>
-<select id="t_email" onchange="toggleTransferEmail()">
+<select id="t_email" onchange="toggleTEmail()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="t_emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
-  <div style="font-size:12px;color:#666;">
-    ✉ Email to create/update
-  </div>
-  <input id="t_email_address" placeholder="john.smith@company.com">
+<div id="tEmailBox" class="box" style="display:none;">
+  <div class="helper">✉ Which email should IT create?</div>
+  <input id="t_email_address">
 </div>
 
-<label>Network Share Folder?</label>
-<select id="t_share" onchange="toggleTransferShare()">
+<label>Network Share Folder Required?</label>
+<select id="t_share" onchange="toggleTShare()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="t_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
-  <input id="t_share_folder" placeholder="/Finance/Reports">
+<div id="tShareBox" class="box" style="display:none;">
+  <div class="helper">📁 Network Share Folder Access Request</div>
 
+  <label>Folder Path to Create / Access</label>
+  <input id="t_share_folder">
+
+  <label>Access Type</label>
   <select id="t_share_access">
     <option>Read Only</option>
     <option>Read / Write</option>
     <option>Full Control</option>
   </select>
-
-  <textarea id="t_share_reason" placeholder="Reason"></textarea>
 </div>
 
 <label>Notes</label>
 <textarea id="t_notes"></textarea>
 
-<button onclick="save('transfer')">Submit</button>
+<button onclick="save()">Submit</button>
 </div>
 
 </div>
@@ -342,40 +304,39 @@ button:hover{background:#005f5f;}
 <script>
 const users={hr:"hr123",it:"it123"};
 
+/* LOGIN */
+function login(){
+  if(users[username.value]===password.value){
+    localStorage.setItem("hr","1");
+    loginPage.style.display="none";
+    system.classList.remove("hidden");
+  }else{
+    error.innerText="Wrong credentials";
+  }
+}
+
 /* SESSION */
 window.onload=()=>{
-  if(localStorage.getItem("hr_login")==="1"){
+  if(localStorage.getItem("hr")==="1"){
     loginPage.style.display="none";
     system.classList.remove("hidden");
   }
 };
 
-/* ENTER KEY */
+/* ENTER */
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"){
     if(system.classList.contains("hidden")) login();
-    else document.querySelector(".card:not(.hidden) button")?.click();
   }
 });
 
-/* LOGIN */
-function login(){
-  if(users[username.value]===password.value){
-    localStorage.setItem("hr_login","1");
-    loginPage.style.display="none";
-    system.classList.remove("hidden");
-    error.innerText="";
-  }else{
-    error.innerText="❌ Invalid login credentials";
-  }
-}
-
+/* LOGOUT */
 function logout(){
-  localStorage.removeItem("hr_login");
+  localStorage.removeItem("hr");
   location.reload();
 }
 
-/* TABS */
+/* TAB */
 function show(id,el){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   el.classList.add("active");
@@ -388,40 +349,30 @@ function show(id,el){
 }
 
 /* TOGGLES */
-function toggleEmailBox(){emailBox.style.display=n_email.value==="Yes"?"block":"none";}
-function toggleAppsBox(){appsBox.style.display=n_apps.value==="Yes"?"block":"none";}
-function toggleOnboardShare(){n_shareBox.style.display=n_share.value==="Yes"?"block":"none";}
-function toggleTransferEmail(){t_emailBox.style.display=t_email.value==="Yes"?"block":"none";}
-function toggleTransferShare(){t_shareBox.style.display=t_share.value==="Yes"?"block":"none";}
+function toggleEmail(){
+  emailBox.style.display=n_email.value==="Yes"?"block":"none";
+}
+function toggleShare(){
+  shareBox.style.display=n_share.value==="Yes"?"block":"none";
+}
+function toggleApps(){
+  appsBox.style.display=n_apps.value==="Yes"?"block":"none";
+}
+function toggleTEmail(){
+  tEmailBox.style.display=t_email.value==="Yes"?"block":"none";
+}
+function toggleTShare(){
+  tShareBox.style.display=t_share.value==="Yes"?"block":"none";
+}
 
 /* SAVE */
-function save(type){
-  let obj={type,time:new Date().toLocaleString()};
-
-  if(type==="onboard"){
-    obj.name=n_name.value;
-    obj.email=n_email.value;
-    obj.emailAddress=n_email_address.value;
-    obj.emailType=n_email_type.value;
-    obj.share=n_share.value;
-    obj.shareFolder=n_share_folder.value;
-  }
-
-  if(type==="transfer"){
-    obj.name=t_name.value;
-    obj.email=t_email.value;
-    obj.emailAddress=t_email_address.value;
-    obj.share=t_share.value;
-    obj.shareFolder=t_share_folder.value;
-  }
-
-  console.log(obj);
+function save(){
   popup();
 }
 
 /* POPUP */
 function popup(){
-  const p=document.getElementById("popup");
+  let p=document.getElementById("popup");
   p.style.display="block";
   setTimeout(()=>p.style.display="none",2000);
 }
