@@ -145,6 +145,7 @@ button{
 <!-- ONBOARD -->
 <div id="onboard" class="card">
 <h3>Onboarding</h3>
+
 <input id="n_name" placeholder="Full Name">
 <input id="n_dept" placeholder="Department">
 <input id="n_job" placeholder="Job Title">
@@ -160,6 +161,7 @@ button{
 <!-- OFFBOARD -->
 <div id="offboard" class="card hidden">
 <h3>Offboarding</h3>
+
 <input id="o_name" placeholder="Full Name">
 <input id="o_dept" placeholder="Department">
 
@@ -174,6 +176,7 @@ button{
 <!-- TRANSFER -->
 <div id="transfer" class="card hidden">
 <h3>Transfer</h3>
+
 <input id="t_name" placeholder="Full Name">
 <input id="t_from" placeholder="From Department">
 <input id="t_to" placeholder="To Department">
@@ -202,14 +205,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getFirestore, collection, addDoc, getDocs } 
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-/* 🔥 YOUR FIREBASE CONFIG */
+/* 🔥 YOUR FIREBASE CONFIG (FIXED) */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyByT1DwJUtyzmIpxozlQWpwZhh1xIwH3-s",
+  authDomain: "employee-onboarding-syst-16409.firebaseapp.com",
+  projectId: "employee-onboarding-syst-16409",
+  storageBucket: "employee-onboarding-syst-16409.appspot.com",
+  messagingSenderId: "474892745379",
+  appId: "1:474892745379:web:30b85e2da74ccd30eddd16"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -222,6 +225,7 @@ window.getDocs = getDocs;
 </script>
 
 <script>
+
 /* LOGIN */
 const users = {
   hr:"hr123",
@@ -240,6 +244,7 @@ function login(){
   }
 }
 
+/* ENTER LOGIN */
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter" && loginPage.style.display !== "none"){
     login();
@@ -259,10 +264,10 @@ function show(id,el){
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* SAVE TO FIREBASE */
+/* SAVE */
 async function save(type){
 
-  let obj = {type, time:new Date().toLocaleString()};
+  let obj = {type,time:new Date().toLocaleString()};
 
   if(type==="onboard"){
     obj.name=n_name.value;
@@ -298,7 +303,6 @@ async function save(type){
 async function searchData(){
 
   const snap = await getDocs(collection(db,"requests"));
-
   let q = searchInput.value.toLowerCase();
 
   let res = [];
