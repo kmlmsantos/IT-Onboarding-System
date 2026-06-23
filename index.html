@@ -7,7 +7,7 @@
 
 <style>
 
-/* ================= LOGIN UI ================= */
+/* ================= LOGIN ================= */
 #loginPage {
   height: 100vh;
   display:flex;
@@ -21,27 +21,12 @@
   width: 340px;
   padding: 35px;
   border-radius: 14px;
-
   background: rgba(255,255,255,0.1);
   backdrop-filter: blur(12px);
-
   border: 1px solid rgba(255,255,255,0.2);
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-
   text-align: center;
   color: white;
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  font-size: 12px;
-  opacity: 0.8;
-  margin-bottom: 20px;
 }
 
 .login-card input {
@@ -65,14 +50,9 @@
   cursor: pointer;
 }
 
-.login-card button:hover {
-  background: #00d1d1;
-}
-
 #error {
   color: #ff6b6b;
   font-size: 13px;
-  margin-top: 10px;
 }
 
 /* ================= SYSTEM ================= */
@@ -152,8 +132,7 @@ button {
 <!-- ================= LOGIN ================= -->
 <div id="loginPage">
   <div class="login-card">
-    <div class="logo">Onboarding System</div>
-    <div class="subtitle">Secure Access Portal</div>
+    <h2>Onboarding System</h2>
 
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
@@ -218,20 +197,24 @@ const users = {
 
 let currentRole = "";
 
-/* ================= LOGIN ================= */
+/* ================= LOGIN FIXED ================= */
 function login(){
-  const u = username.value;
-  const p = password.value;
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
+  const error = document.getElementById("error");
 
   if(users[u] && users[u].pass === p){
+
     currentRole = users[u].role;
 
-    loginPage.classList.add("hidden");
-    system.classList.remove("hidden");
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("system").classList.remove("hidden");
 
-    roleTitle.innerText = "Logged in as: " + currentRole;
+    document.getElementById("roleTitle").innerText =
+      "Logged in as: " + currentRole;
 
     loadMenu();
+
   } else {
     error.innerText = "Invalid login";
   }
@@ -239,6 +222,7 @@ function login(){
 
 /* ================= MENU ================= */
 function loadMenu(){
+  const menu = document.getElementById("menu");
   menu.innerHTML = "";
 
   if(currentRole === "HR"){
@@ -255,38 +239,39 @@ function loadMenu(){
   }
 }
 
-/* ================= SHOW ================= */
+/* ================= SHOW FIXED ================= */
 function show(id){
-  onboard.classList.add("hidden");
-  offboard.classList.add("hidden");
-  transfer.classList.add("hidden");
+
+  document.getElementById("onboard").classList.add("hidden");
+  document.getElementById("offboard").classList.add("hidden");
+  document.getElementById("transfer").classList.add("hidden");
 
   document.getElementById(id).classList.remove("hidden");
 }
 
 /* ================= ACTIONS ================= */
 function submitOnboard(){
-  output.innerText =
+  document.getElementById("output").innerText =
 `ONBOARD REQUEST
-Name: ${n_name.value}
-Dept: ${n_dept.value}
+Name: ${document.getElementById("n_name").value}
+Dept: ${document.getElementById("n_dept").value}
 Role: ${currentRole}`;
 }
 
 function submitOffboard(){
-  output.innerText =
+  document.getElementById("output").innerText =
 `OFFBOARD REQUEST
-Name: ${o_name.value}
-Dept: ${o_dept.value}
+Name: ${document.getElementById("o_name").value}
+Dept: ${document.getElementById("o_dept").value}
 Role: ${currentRole}`;
 }
 
 function submitTransfer(){
-  output.innerText =
+  document.getElementById("output").innerText =
 `TRANSFER REQUEST
-Name: ${t_name.value}
-From: ${t_from.value}
-To: ${t_to.value}
+Name: ${document.getElementById("t_name").value}
+From: ${document.getElementById("t_from").value}
+To: ${document.getElementById("t_to").value}
 Role: ${currentRole}`;
 }
 
