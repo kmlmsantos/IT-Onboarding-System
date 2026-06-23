@@ -6,15 +6,19 @@
 <title>Onboarding System</title>
 
 <style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f7fa;
+}
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 #loginPage{
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background: radial-gradient(circle at top,#0b5e5e,#062c2c);
-  font-family:Arial;
+  background:linear-gradient(135deg,#0b5e5e,#062c2c);
 }
 
 .login-card{
@@ -23,8 +27,8 @@
   border-radius:12px;
   background:rgba(255,255,255,0.1);
   backdrop-filter:blur(10px);
-  text-align:center;
   color:white;
+  text-align:center;
 }
 
 .login-card input{
@@ -40,17 +44,10 @@
   border:none;
   color:white;
   border-radius:6px;
-  cursor:pointer;
 }
 
-/* ================= SYSTEM ================= */
+/* SYSTEM */
 .hidden{display:none;}
-
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f4f7fa;
-}
 
 header{
   background:#007a7a;
@@ -60,8 +57,11 @@ header{
   justify-content:space-between;
 }
 
-/* MENU */
-.container{max-width:1100px;margin:auto;padding:20px;}
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
 
 .card{
   background:white;
@@ -70,22 +70,20 @@ header{
   border-radius:10px;
 }
 
-/* TABS */
 .tab{
   display:inline-block;
   padding:10px;
   margin-right:5px;
   background:#ddd;
-  cursor:pointer;
   border-radius:6px;
+  cursor:pointer;
 }
 
 .tab.active{
-  background:#00a86b;
+  background:#28a745;
   color:white;
 }
 
-/* INPUTS */
 input,select,textarea{
   width:100%;
   padding:10px;
@@ -101,45 +99,33 @@ button{
   border-radius:6px;
 }
 
-/* OUTPUT */
-.output{
-  background:#eef7f7;
-  padding:15px;
-  white-space:pre-line;
-  border-left:5px solid #007a7a;
-}
-
-/* POPUP */
 #popup{
   position:fixed;
   top:20px;
   right:20px;
-  background:#00a86b;
+  background:#28a745;
   color:white;
-  padding:12px 18px;
+  padding:10px 15px;
   border-radius:8px;
   display:none;
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <div id="loginPage">
   <div class="login-card">
     <h2>Onboarding System</h2>
-
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
-
     <button onclick="login()">Login</button>
     <p id="error"></p>
   </div>
 </div>
 
-<!-- ================= SYSTEM ================= -->
+<!-- SYSTEM -->
 <div id="system" class="hidden">
 
 <header>
@@ -149,77 +135,48 @@ button{
 
 <div class="container">
 
-<!-- MENU -->
 <div class="card">
   <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
   <div class="tab" onclick="show('offboard',this)">Offboarding</div>
   <div class="tab" onclick="show('transfer',this)">Transfer</div>
-  <div class="tab" onclick="showSearch(this)">Search</div>
+  <div class="tab" onclick="show('search',this)">Search</div>
 </div>
 
 <!-- ONBOARD -->
 <div id="onboard" class="card">
-
-<h3>New Employee Onboarding</h3>
-
+<h3>Onboarding</h3>
 <input id="n_name" placeholder="Full Name">
-<input id="n_contact" placeholder="Contact Number">
-<input id="n_job" placeholder="Job Title">
 <input id="n_dept" placeholder="Department">
-<input id="n_head" placeholder="Department Head">
+<input id="n_job" placeholder="Job Title">
 
 <select id="n_email"><option>YES</option><option>NO</option></select>
 <select id="n_fin"><option>YES</option><option>NO</option></select>
 
-<input id="n_folder" placeholder="Folder Name">
-<textarea id="n_soft"></textarea>
-<textarea id="n_notes"></textarea>
+<textarea id="n_notes" placeholder="Notes"></textarea>
 
 <button onclick="save('onboard')">Submit</button>
 </div>
 
 <!-- OFFBOARD -->
 <div id="offboard" class="card hidden">
-
-<h3>Employee Offboarding</h3>
-
+<h3>Offboarding</h3>
 <input id="o_name" placeholder="Full Name">
 <input id="o_dept" placeholder="Department">
-<input id="o_last" type="date">
 
-<select id="o_email">
-<option>Disable Email</option><option>Keep Active</option>
-</select>
+<select id="o_email"><option>Disable</option><option>Keep</option></select>
+<select id="o_fin"><option>Revoke</option><option>Keep</option></select>
 
-<select id="o_fin">
-<option>Revoke Access</option><option>Keep Access</option>
-</select>
-
-<select id="o_folder">
-<option>Remove Access</option><option>Keep Access</option>
-</select>
-
-<textarea id="o_reason"></textarea>
+<textarea id="o_notes"></textarea>
 
 <button onclick="save('offboard')">Submit</button>
 </div>
 
 <!-- TRANSFER -->
 <div id="transfer" class="card hidden">
-
-<h3>Department Transfer</h3>
-
+<h3>Transfer</h3>
 <input id="t_name" placeholder="Full Name">
-<input id="t_old" placeholder="From Department">
-<input id="t_new" placeholder="To Department">
-
-<select id="t_fin">
-<option>Update Access</option><option>No Change</option>
-</select>
-
-<select id="t_folder">
-<option>Update Folder</option><option>No Change</option>
-</select>
+<input id="t_from" placeholder="From Department">
+<input id="t_to" placeholder="To Department">
 
 <textarea id="t_notes"></textarea>
 
@@ -227,153 +184,154 @@ button{
 </div>
 
 <!-- SEARCH -->
-<div id="searchBox" class="card hidden">
-
-<h3>Search Records</h3>
-
-<input id="searchInput" placeholder="Search by name">
+<div id="search" class="card hidden">
+<h3>Search</h3>
+<input id="searchInput" placeholder="Search name">
 <button onclick="searchData()">Search</button>
-
-<div id="searchResult" class="output">No data</div>
+<div id="searchResult"></div>
 </div>
 
 </div>
 </div>
 
-<!-- POPUP -->
-<div id="popup">Saved Successfully ✔</div>
+<div id="popup">Saved ✔</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } 
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db = db;
+window.collection = collection;
+window.addDoc = addDoc;
+window.getDocs = getDocs;
+</script>
 
 <script>
-
-/* ================= LOGIN ================= */
+/* LOGIN */
 const users = {
-  hr:{pass:"hr123"},
-  it:{pass:"it123"},
-  head:{pass:"head123"}
+  hr:"hr123",
+  it:"it123"
 };
 
 function login(){
+  const u=username.value;
+  const p=password.value;
 
-  const u=username.value.trim();
-  const p=password.value.trim();
-
-  if(users[u] && users[u].pass===p){
+  if(users[u] && users[u]===p){
     loginPage.style.display="none";
     system.classList.remove("hidden");
   }else{
-    error.innerText="Wrong login details";
+    error.innerText="Wrong login";
   }
 }
 
-/* ENTER KEY LOGIN */
 document.addEventListener("keydown",e=>{
-  if(e.key==="Enter") login();
+  if(e.key==="Enter" && loginPage.style.display !== "none"){
+    login();
+  }
 });
 
-/* ================= ACTIVE TAB ================= */
-function setActive(el){
-  document.querySelectorAll(".tab").forEach(t=>{
-    t.classList.remove("active");
-  });
-  if(el) el.classList.add("active");
-}
-
-/* ================= NAV ================= */
+/* TAB */
 function show(id,el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
 
   onboard.classList.add("hidden");
   offboard.classList.add("hidden");
   transfer.classList.add("hidden");
-  searchBox.classList.add("hidden");
+  search.classList.add("hidden");
 
   document.getElementById(id).classList.remove("hidden");
-
-  setActive(el);
 }
 
-function showSearch(el){
-  show("searchBox",el);
-}
+/* SAVE TO FIREBASE */
+async function save(type){
 
-/* ================= STORAGE ================= */
-function getData(){
-  return JSON.parse(localStorage.getItem("hrData") || "[]");
-}
-
-function setData(data){
-  localStorage.setItem("hrData", JSON.stringify(data));
-}
-
-/* ================= SAVE ================= */
-function save(type){
-
-  let record={type,time:new Date().toLocaleString()};
+  let obj = {type, time:new Date().toLocaleString()};
 
   if(type==="onboard"){
-    record.name=n_name.value;
-    record.dept=n_dept.value;
+    obj.name=n_name.value;
+    obj.dept=n_dept.value;
+    obj.job=n_job.value;
+    obj.email=n_email.value;
+    obj.fin=n_fin.value;
+    obj.notes=n_notes.value;
   }
 
   if(type==="offboard"){
-    record.name=o_name.value;
-    record.dept=o_dept.value;
+    obj.name=o_name.value;
+    obj.dept=o_dept.value;
+    obj.email=o_email.value;
+    obj.fin=o_fin.value;
+    obj.notes=o_notes.value;
   }
 
   if(type==="transfer"){
-    record.name=t_name.value;
-    record.from=t_old.value;
-    record.to=t_new.value;
+    obj.name=t_name.value;
+    obj.from=t_from.value;
+    obj.to=t_to.value;
+    obj.notes=t_notes.value;
   }
 
-  let data=getData();
-  data.push(record);
-  setData(data);
+  await addDoc(collection(db,"requests"), obj);
 
-  clearForm(type);
   popup();
+  clearForm();
 }
 
-/* ================= CLEAR ================= */
-function clearForm(type){
+/* SEARCH */
+async function searchData(){
 
-  if(type==="onboard"){
-    n_name.value=""; n_dept.value=""; n_job.value="";
-  }
+  const snap = await getDocs(collection(db,"requests"));
 
-  if(type==="offboard"){
-    o_name.value=""; o_dept.value=""; o_reason.value="";
-  }
+  let q = searchInput.value.toLowerCase();
 
-  if(type==="transfer"){
-    t_name.value=""; t_old.value=""; t_new.value="";
-  }
-}
+  let res = [];
 
-/* ================= POPUP ================= */
-function popup(){
-  document.getElementById("popup").style.display="block";
-  setTimeout(()=>popup.style.display="none",2000);
-}
-
-/* ================= SEARCH ================= */
-function searchData(){
-
-  let q=searchInput.value.toLowerCase();
-  let data=getData();
-
-  let res=data.filter(x=>x.name && x.name.toLowerCase().includes(q));
+  snap.forEach(doc=>{
+    let d = doc.data();
+    if(d.name && d.name.toLowerCase().includes(q)){
+      res.push(d);
+    }
+  });
 
   searchResult.innerText =
   res.length
-  ? res.map(r=>`${r.type.toUpperCase()} | ${r.name} | ${r.dept || ""} | ${r.time}`).join("\n")
-  : "No records found";
+  ? res.map(r=>`${r.type} | ${r.name} | ${r.dept || ""} | ${r.time}`).join("\n")
+  : "No results";
+}
+
+/* CLEAR */
+function clearForm(){
+  document.querySelectorAll("input,textarea").forEach(i=>i.value="");
+}
+
+/* POPUP */
+function popup(){
+  const p=document.getElementById("popup");
+  p.style.display="block";
+  setTimeout(()=>p.style.display="none",2000);
 }
 
 /* LOGOUT */
 function logout(){
   location.reload();
 }
-
 </script>
 
 </body>
