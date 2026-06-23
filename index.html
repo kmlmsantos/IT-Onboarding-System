@@ -9,8 +9,6 @@
 *{box-sizing:border-box;font-family:Arial;}
 body{margin:0;background:#eef3f7;}
 
-.hidden{display:none;}
-
 /* LOGIN */
 #loginPage{
   height:100vh;
@@ -22,42 +20,55 @@ body{margin:0;background:#eef3f7;}
 
 .login-card{
   width:320px;
-  padding:25px;
-  border-radius:12px;
+  padding:28px;
+  border-radius:14px;
   background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(14px);
   color:white;
   text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,0.3);
 }
 
 .login-card input{
   width:100%;
-  padding:10px;
+  padding:11px;
   margin:6px 0;
-  border-radius:8px;
   border:none;
+  border-radius:8px;
 }
 
-button{
-  padding:10px;
+.login-card button{
+  width:100%;
+  padding:11px;
+  margin-top:10px;
   border:none;
   border-radius:8px;
-  background:#007a7a;
+  background:#00b3b3;
   color:white;
   cursor:pointer;
 }
 
+#error{
+  font-size:12px;
+  color:#ffb3b3;
+  margin-top:8px;
+}
+
 /* SYSTEM */
+.hidden{display:none;}
+
 header{
   background:#007a7a;
   color:white;
-  padding:12px;
+  padding:12px 18px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
+  font-size:14px;
 }
 
 .container{
-  max-width:1000px;
+  max-width:950px;
   margin:auto;
   padding:20px;
 }
@@ -67,59 +78,65 @@ header{
   padding:18px;
   margin-top:14px;
   border-radius:12px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.05);
 }
 
+/* TABS */
 .tab{
   display:inline-block;
   padding:8px 12px;
   margin-right:6px;
-  background:#ddd;
+  background:#e0e0e0;
   border-radius:8px;
   cursor:pointer;
+  font-size:13px;
 }
 
 .tab.active{background:#28a745;color:white;}
 
-label{font-size:12px;font-weight:bold;}
+/* FORM */
+label{
+  font-size:12px;
+  font-weight:600;
+  display:block;
+  margin-top:10px;
+}
+
 input,select,textarea{
   width:100%;
   padding:10px;
   margin-top:5px;
   border:1px solid #ddd;
   border-radius:8px;
+  font-size:13px;
 }
 
-.box{
-  background:#f8f9fa;
-  padding:10px;
+textarea{height:70px;resize:none;}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:11px;
+  margin-top:14px;
+  border:none;
   border-radius:8px;
-  margin-top:5px;
+  background:#007a7a;
+  color:white;
+  cursor:pointer;
 }
 
-/* SEARCH + RESULTS */
-#resultBox{
-  margin-top:10px;
-  background:#fff;
-  padding:10px;
+button:hover{background:#005f5f;}
+
+/* POPUP */
+#popup{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#28a745;
+  color:white;
+  padding:10px 14px;
   border-radius:8px;
-  border:1px solid #ddd;
-}
-
-.record{
-  border-bottom:1px solid #eee;
-  padding:8px 0;
-}
-
-/* PRINT */
-@media print{
-  body *{visibility:hidden;}
-  #printArea, #printArea *{visibility:visible;}
-  #printArea{
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-  }
+  display:none;
 }
 </style>
 </head>
@@ -129,7 +146,7 @@ input,select,textarea{
 <!-- LOGIN -->
 <div id="loginPage">
   <div class="login-card">
-    <h2>HR System</h2>
+    <h2>HR System Login</h2>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
@@ -147,116 +164,266 @@ input,select,textarea{
 
 <div class="container">
 
-<!-- SEARCH -->
+<!-- TABS -->
 <div class="card">
-  <h3>Search Records</h3>
-  <input id="searchInput" placeholder="Search by name">
-  <button onclick="searchData()">Search</button>
-
-  <div id="resultBox"></div>
+  <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
+  <div class="tab" onclick="show('offboard',this)">Offboarding</div>
+  <div class="tab" onclick="show('transfer',this)">Transfer</div>
 </div>
 
-<!-- FORM -->
-<div class="card">
-  <h3>Onboarding / Transfer / Offboarding</h3>
+<!-- ================= ONBOARD ================= -->
+<div id="onboard" class="card">
+<h3>Employee Onboarding</h3>
 
-  <input id="name" placeholder="Full Name">
-  <input id="dept" placeholder="Department">
+<label>Full Name</label>
+<input id="n_name">
 
-  <select id="type">
-    <option>Onboarding</option>
-    <option>Transfer</option>
-    <option>Offboarding</option>
+<label>Department</label>
+<input id="n_dept">
+
+<label>Job Title</label>
+<input id="n_job">
+
+<label>Start Date</label>
+<input id="n_start" type="date">
+
+<!-- EMAIL -->
+<label>Email Account Required?</label>
+<select id="n_email" onchange="toggleEmailBox()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;margin-bottom:6px;">
+    ✉ Enter company email to be created
+  </div>
+  <input id="n_email_address" placeholder="e.g. john.smith@company.com">
+
+  <div style="font-size:12px;color:#666;margin-top:8px;">
+
+
+<!-- FINPOWER -->
+<label>Finpower Access</label>
+<select id="n_finpower">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<!-- APPS -->
+<label>Additional Apps Required?</label>
+<select id="n_apps" onchange="toggleAppsBox()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="appsBox" style="display:none;">
+  <label>Apps List</label>
+  <textarea id="n_app_list"></textarea>
+
+  <label>Reason</label>
+  <textarea id="n_app_reason"></textarea>
+
+  <label>Email Justification</label>
+  <textarea id="n_app_email_reason"></textarea>
+</div>
+
+<!-- NETWORK SHARE -->
+<label>Network Share Folder Required?</label>
+<select id="n_share" onchange="toggleOnboardShare()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="n_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;">
+    📁 Enter folder path for IT provisioning
+  </div>
+
+  <input id="n_share_folder" placeholder="/Departments/HR/EmployeeName">
+
+  <div style="font-size:12px;color:#666;margin-top:8px;">
+    🔐 Access Level
+  </div>
+
+  <select id="n_share_access">
+    <option>Read Only</option>
+    <option>Read / Write</option>
+    <option>Full Control</option>
   </select>
 
-  <textarea id="notes" placeholder="Notes"></textarea>
-
-  <button onclick="save()">Submit</button>
+  <textarea id="n_share_reason" placeholder="Reason for access"></textarea>
 </div>
 
-<!-- PRINT AREA -->
-<div id="printArea" class="card hidden"></div>
+<label>Notes</label>
+<textarea id="n_notes"></textarea>
+
+<button onclick="save('onboard')">Submit</button>
+</div>
+
+<!-- ================= OFFBOARD ================= -->
+<div id="offboard" class="card hidden">
+<h3>Offboarding</h3>
+
+<input id="o_name" placeholder="Name">
+<input id="o_dept" placeholder="Department">
+<input id="o_lastday" type="date">
+
+<select id="o_reason">
+  <option>Resignation</option>
+  <option>Termination</option>
+  <option>Contract End</option>
+</select>
+
+<button onclick="save('offboard')">Submit</button>
+</div>
+
+<!-- ================= TRANSFER ================= -->
+<div id="transfer" class="card hidden">
+<h3>Employee Transfer</h3>
+
+<label>Name</label>
+<input id="t_name">
+
+<label>From Department</label>
+<input id="t_from">
+
+<label>To Department</label>
+<input id="t_to">
+
+<label>Job Title</label>
+<input id="t_title">
+
+<label>Effective Date</label>
+<input id="t_date" type="date">
+
+<label>Email Required?</label>
+<select id="t_email" onchange="toggleTransferEmail()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="t_emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;">
+    ✉ Email to create/update
+  </div>
+  <input id="t_email_address" placeholder="john.smith@company.com">
+</div>
+
+<label>Network Share Folder?</label>
+<select id="t_share" onchange="toggleTransferShare()">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<div id="t_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <input id="t_share_folder" placeholder="/Finance/Reports">
+
+  <select id="t_share_access">
+    <option>Read Only</option>
+    <option>Read / Write</option>
+    <option>Full Control</option>
+  </select>
+
+  <textarea id="t_share_reason" placeholder="Reason"></textarea>
+</div>
+
+<label>Notes</label>
+<textarea id="t_notes"></textarea>
+
+<button onclick="save('transfer')">Submit</button>
+</div>
 
 </div>
 </div>
+
+<div id="popup">Saved ✔</div>
 
 <script>
-let records = JSON.parse(localStorage.getItem("hr_records") || "[]");
+const users={hr:"hr123",it:"it123"};
+
+/* SESSION */
+window.onload=()=>{
+  if(localStorage.getItem("hr_login")==="1"){
+    loginPage.style.display="none";
+    system.classList.remove("hidden");
+  }
+};
+
+/* ENTER KEY */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(system.classList.contains("hidden")) login();
+    else document.querySelector(".card:not(.hidden) button")?.click();
+  }
+});
 
 /* LOGIN */
 function login(){
-  const users={hr:"hr123",it:"it123"};
   if(users[username.value]===password.value){
+    localStorage.setItem("hr_login","1");
     loginPage.style.display="none";
     system.classList.remove("hidden");
+    error.innerText="";
   }else{
-    error.innerText="Wrong login";
+    error.innerText="❌ Invalid login credentials";
   }
 }
 
-/* SAVE */
-function save(){
-  const obj={
-    name:name.value,
-    dept:dept.value,
-    type:type.value,
-    notes:notes.value,
-    time:new Date().toLocaleString()
-  };
-
-  records.push(obj);
-  localStorage.setItem("hr_records",JSON.stringify(records));
-
-  alert("Saved ✔");
-  name.value="";
-  dept.value="";
-  notes.value="";
-}
-
-/* SEARCH */
-function searchData(){
-  let q = searchInput.value.toLowerCase();
-  let res = records.filter(r=>r.name.toLowerCase().includes(q));
-
-  let box = document.getElementById("resultBox");
-  box.innerHTML = res.length ? "" : "No results";
-
-  res.forEach((r,i)=>{
-    let div=document.createElement("div");
-    div.className="record";
-    div.innerHTML=`
-      <b>${r.name}</b> (${r.type})<br>
-      ${r.dept}<br>
-      ${r.time}<br>
-      <button onclick="printRecord(${records.indexOf(r)})">Print</button>
-    `;
-    box.appendChild(div);
-  });
-}
-
-/* PRINT */
-function printRecord(i){
-  let r = records[i];
-
-  let printArea = document.getElementById("printArea");
-  printArea.classList.remove("hidden");
-
-  printArea.innerHTML=`
-    <h2>HR Request</h2>
-    <p><b>Name:</b> ${r.name}</p>
-    <p><b>Department:</b> ${r.dept}</p>
-    <p><b>Type:</b> ${r.type}</p>
-    <p><b>Notes:</b> ${r.notes}</p>
-    <p><b>Time:</b> ${r.time}</p>
-  `;
-
-  window.print();
-  printArea.classList.add("hidden");
-}
-
-/* LOGOUT */
 function logout(){
+  localStorage.removeItem("hr_login");
   location.reload();
+}
+
+/* TABS */
+function show(id,el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+
+  onboard.classList.add("hidden");
+  offboard.classList.add("hidden");
+  transfer.classList.add("hidden");
+
+  document.getElementById(id).classList.remove("hidden");
+}
+
+/* TOGGLES */
+function toggleEmailBox(){emailBox.style.display=n_email.value==="Yes"?"block":"none";}
+function toggleAppsBox(){appsBox.style.display=n_apps.value==="Yes"?"block":"none";}
+function toggleOnboardShare(){n_shareBox.style.display=n_share.value==="Yes"?"block":"none";}
+function toggleTransferEmail(){t_emailBox.style.display=t_email.value==="Yes"?"block":"none";}
+function toggleTransferShare(){t_shareBox.style.display=t_share.value==="Yes"?"block":"none";}
+
+/* SAVE */
+function save(type){
+  let obj={type,time:new Date().toLocaleString()};
+
+  if(type==="onboard"){
+    obj.name=n_name.value;
+    obj.email=n_email.value;
+    obj.emailAddress=n_email_address.value;
+    obj.emailType=n_email_type.value;
+    obj.share=n_share.value;
+    obj.shareFolder=n_share_folder.value;
+  }
+
+  if(type==="transfer"){
+    obj.name=t_name.value;
+    obj.email=t_email.value;
+    obj.emailAddress=t_email_address.value;
+    obj.share=t_share.value;
+    obj.shareFolder=t_share_folder.value;
+  }
+
+  console.log(obj);
+  popup();
+}
+
+/* POPUP */
+function popup(){
+  const p=document.getElementById("popup");
+  p.style.display="block";
+  setTimeout(()=>p.style.display="none",2000);
 }
 </script>
 
