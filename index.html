@@ -60,6 +60,7 @@ header{
   justify-content:space-between;
 }
 
+/* MENU */
 .container{max-width:1100px;margin:auto;padding:20px;}
 
 .card{
@@ -69,6 +70,7 @@ header{
   border-radius:10px;
 }
 
+/* TABS */
 .tab{
   display:inline-block;
   padding:10px;
@@ -78,8 +80,12 @@ header{
   border-radius:6px;
 }
 
-.tab.active{background:#007a7a;color:white;}
+.tab.active{
+  background:#00a86b;
+  color:white;
+}
 
+/* INPUTS */
 input,select,textarea{
   width:100%;
   padding:10px;
@@ -95,6 +101,7 @@ button{
   border-radius:6px;
 }
 
+/* OUTPUT */
 .output{
   background:#eef7f7;
   padding:15px;
@@ -102,12 +109,12 @@ button{
   border-left:5px solid #007a7a;
 }
 
-/* popup */
+/* POPUP */
 #popup{
   position:fixed;
   top:20px;
   right:20px;
-  background:#007a7a;
+  background:#00a86b;
   color:white;
   padding:12px 18px;
   border-radius:8px;
@@ -144,13 +151,13 @@ button{
 
 <!-- MENU -->
 <div class="card">
-  <div class="tab active" onclick="show('onboard')">Onboarding</div>
-  <div class="tab" onclick="show('offboard')">Offboarding</div>
-  <div class="tab" onclick="show('transfer')">Transfer</div>
-  <div class="tab" onclick="showSearch()">Search</div>
+  <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
+  <div class="tab" onclick="show('offboard',this)">Offboarding</div>
+  <div class="tab" onclick="show('transfer',this)">Transfer</div>
+  <div class="tab" onclick="showSearch(this)">Search</div>
 </div>
 
-<!-- ================= ONBOARDING ================= -->
+<!-- ONBOARD -->
 <div id="onboard" class="card">
 
 <h3>New Employee Onboarding</h3>
@@ -161,29 +168,17 @@ button{
 <input id="n_dept" placeholder="Department">
 <input id="n_head" placeholder="Department Head">
 
-<h4>Email Provisioning</h4>
-<select id="n_email">
-<option>YES</option><option>NO</option>
-</select>
+<select id="n_email"><option>YES</option><option>NO</option></select>
+<select id="n_fin"><option>YES</option><option>NO</option></select>
 
-<h4>FinPower Access</h4>
-<select id="n_fin">
-<option>YES</option><option>NO</option>
-</select>
-
-<h4>Network Folder Access</h4>
 <input id="n_folder" placeholder="Folder Name">
-
-<h4>Software Access</h4>
 <textarea id="n_soft"></textarea>
-
-<h4>Notes</h4>
 <textarea id="n_notes"></textarea>
 
 <button onclick="save('onboard')">Submit</button>
 </div>
 
-<!-- ================= OFFBOARD ================= -->
+<!-- OFFBOARD -->
 <div id="offboard" class="card hidden">
 
 <h3>Employee Offboarding</h3>
@@ -192,28 +187,24 @@ button{
 <input id="o_dept" placeholder="Department">
 <input id="o_last" type="date">
 
-<h4>Email</h4>
 <select id="o_email">
 <option>Disable Email</option><option>Keep Active</option>
 </select>
 
-<h4>FinPower</h4>
 <select id="o_fin">
 <option>Revoke Access</option><option>Keep Access</option>
 </select>
 
-<h4>Network Folder</h4>
 <select id="o_folder">
 <option>Remove Access</option><option>Keep Access</option>
 </select>
 
-<h4>Reason</h4>
 <textarea id="o_reason"></textarea>
 
 <button onclick="save('offboard')">Submit</button>
 </div>
 
-<!-- ================= TRANSFER ================= -->
+<!-- TRANSFER -->
 <div id="transfer" class="card hidden">
 
 <h3>Department Transfer</h3>
@@ -222,7 +213,6 @@ button{
 <input id="t_old" placeholder="From Department">
 <input id="t_new" placeholder="To Department">
 
-<h4>System Updates</h4>
 <select id="t_fin">
 <option>Update Access</option><option>No Change</option>
 </select>
@@ -236,7 +226,7 @@ button{
 <button onclick="save('transfer')">Submit</button>
 </div>
 
-<!-- ================= SEARCH ================= -->
+<!-- SEARCH -->
 <div id="searchBox" class="card hidden">
 
 <h3>Search Records</h3>
@@ -268,19 +258,42 @@ function login(){
   const p=password.value.trim();
 
   if(users[u] && users[u].pass===p){
-
-    loginPage.style.display="none";   // FULL DISAPPEAR FIX
+    loginPage.style.display="none";
     system.classList.remove("hidden");
-
   }else{
     error.innerText="Wrong login details";
   }
 }
 
-/* ENTER LOGIN */
+/* ENTER KEY LOGIN */
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter") login();
 });
+
+/* ================= ACTIVE TAB ================= */
+function setActive(el){
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.classList.remove("active");
+  });
+  if(el) el.classList.add("active");
+}
+
+/* ================= NAV ================= */
+function show(id,el){
+
+  onboard.classList.add("hidden");
+  offboard.classList.add("hidden");
+  transfer.classList.add("hidden");
+  searchBox.classList.add("hidden");
+
+  document.getElementById(id).classList.remove("hidden");
+
+  setActive(el);
+}
+
+function showSearch(el){
+  show("searchBox",el);
+}
 
 /* ================= STORAGE ================= */
 function getData(){
@@ -299,30 +312,17 @@ function save(type){
   if(type==="onboard"){
     record.name=n_name.value;
     record.dept=n_dept.value;
-    record.job=n_job.value;
-    record.email=n_email.value;
-    record.fin=n_fin.value;
-    record.folder=n_folder.value;
-    record.notes=n_notes.value;
   }
 
   if(type==="offboard"){
     record.name=o_name.value;
     record.dept=o_dept.value;
-    record.last=o_last.value;
-    record.email=o_email.value;
-    record.fin=o_fin.value;
-    record.folder=o_folder.value;
-    record.reason=o_reason.value;
   }
 
   if(type==="transfer"){
     record.name=t_name.value;
     record.from=t_old.value;
     record.to=t_new.value;
-    record.fin=t_fin.value;
-    record.folder=t_folder.value;
-    record.notes=t_notes.value;
   }
 
   let data=getData();
@@ -338,17 +338,14 @@ function clearForm(type){
 
   if(type==="onboard"){
     n_name.value=""; n_dept.value=""; n_job.value="";
-    n_folder.value=""; n_soft.value=""; n_notes.value="";
   }
 
   if(type==="offboard"){
-    o_name.value=""; o_dept.value=""; o_last.value="";
-    o_reason.value="";
+    o_name.value=""; o_dept.value=""; o_reason.value="";
   }
 
   if(type==="transfer"){
     t_name.value=""; t_old.value=""; t_new.value="";
-    t_notes.value="";
   }
 }
 
@@ -356,21 +353,6 @@ function clearForm(type){
 function popup(){
   document.getElementById("popup").style.display="block";
   setTimeout(()=>popup.style.display="none",2000);
-}
-
-/* ================= NAV ================= */
-function show(id){
-
-  onboard.classList.add("hidden");
-  offboard.classList.add("hidden");
-  transfer.classList.add("hidden");
-  searchBox.classList.add("hidden");
-
-  document.getElementById(id).classList.remove("hidden");
-}
-
-function showSearch(){
-  show("searchBox");
 }
 
 /* ================= SEARCH ================= */
@@ -383,7 +365,7 @@ function searchData(){
 
   searchResult.innerText =
   res.length
-  ? res.map(r=>`${r.type.toUpperCase()} | ${r.name} | ${r.dept || ""} → ${r.to || ""} | ${r.time}`).join("\n")
+  ? res.map(r=>`${r.type.toUpperCase()} | ${r.name} | ${r.dept || ""} | ${r.time}`).join("\n")
   : "No records found";
 }
 
