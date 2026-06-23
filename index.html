@@ -48,6 +48,12 @@ body{margin:0;background:#eef3f7;}
   cursor:pointer;
 }
 
+#error{
+  font-size:12px;
+  color:#ffb3b3;
+  margin-top:8px;
+}
+
 /* SYSTEM */
 .hidden{display:none;}
 
@@ -144,7 +150,7 @@ button:hover{background:#005f5f;}
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
-    <p id="error"></p>
+    <div id="error"></div>
   </div>
 </div>
 
@@ -158,18 +164,18 @@ button:hover{background:#005f5f;}
 
 <div class="container">
 
+<!-- TABS -->
 <div class="card">
   <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
   <div class="tab" onclick="show('offboard',this)">Offboarding</div>
   <div class="tab" onclick="show('transfer',this)">Transfer</div>
-  <div class="tab" onclick="show('search',this)">Search</div>
 </div>
 
 <!-- ================= ONBOARD ================= -->
 <div id="onboard" class="card">
-<h3>Onboarding</h3>
+<h3>Employee Onboarding</h3>
 
-<label>Name</label>
+<label>Full Name</label>
 <input id="n_name">
 
 <label>Department</label>
@@ -181,60 +187,84 @@ button:hover{background:#005f5f;}
 <label>Start Date</label>
 <input id="n_start" type="date">
 
-<label>Email Required?</label>
+<!-- EMAIL -->
+<label>Email Account Required?</label>
 <select id="n_email" onchange="toggleEmailBox()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="emailBox" style="display:none;">
-<label>Email Address</label>
-<input id="n_email_address">
+<div id="emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;margin-bottom:6px;">
+    ✉ Enter company email to be created
+  </div>
+  <input id="n_email_address" placeholder="e.g. john.smith@company.com">
+
+  <div style="font-size:12px;color:#666;margin-top:8px;">
+    📥 Email Type
+  </div>
+  <select id="n_email_type">
+    <option>Personal Work Email</option>
+    <option>Shared Inbox</option>
+    <option>Department Inbox</option>
+    <option>System Account</option>
+  </select>
 </div>
 
+<!-- FINPOWER -->
 <label>Finpower Access</label>
 <select id="n_finpower">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<label>Additional Apps?</label>
+<!-- APPS -->
+<label>Additional Apps Required?</label>
 <select id="n_apps" onchange="toggleAppsBox()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
 <div id="appsBox" style="display:none;">
-<label>Apps List</label>
-<textarea id="n_app_list"></textarea>
+  <label>Apps List</label>
+  <textarea id="n_app_list"></textarea>
 
-<label>Reason</label>
-<textarea id="n_app_reason"></textarea>
+  <label>Reason</label>
+  <textarea id="n_app_reason"></textarea>
 
-<label>Email Justification</label>
-<textarea id="n_app_email_reason"></textarea>
+  <label>Email Justification</label>
+  <textarea id="n_app_email_reason"></textarea>
 </div>
 
-<label>Network Share Folder?</label>
+<!-- NETWORK SHARE -->
+<label>Network Share Folder Required?</label>
 <select id="n_share" onchange="toggleOnboardShare()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="n_shareBox" style="display:none;">
-<label>Folder Path</label>
-<input id="n_share_folder">
+<div id="n_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;">
+    📁 Enter folder path for IT provisioning
+  </div>
 
-<label>Access Level</label>
-<select id="n_share_access">
-  <option>Read Only</option>
-  <option>Read/Write</option>
-  <option>Full Access</option>
-</select>
+  <input id="n_share_folder" placeholder="/Departments/HR/EmployeeName">
+
+  <div style="font-size:12px;color:#666;margin-top:8px;">
+    🔐 Access Level
+  </div>
+
+  <select id="n_share_access">
+    <option>Read Only</option>
+    <option>Read / Write</option>
+    <option>Full Control</option>
+  </select>
+
+  <textarea id="n_share_reason" placeholder="Reason for access"></textarea>
 </div>
 
-<label>Access Notes</label>
-<textarea id="n_access"></textarea>
+<label>Notes</label>
+<textarea id="n_notes"></textarea>
 
 <button onclick="save('onboard')">Submit</button>
 </div>
@@ -245,7 +275,6 @@ button:hover{background:#005f5f;}
 
 <input id="o_name" placeholder="Name">
 <input id="o_dept" placeholder="Department">
-
 <input id="o_lastday" type="date">
 
 <select id="o_reason">
@@ -259,7 +288,7 @@ button:hover{background:#005f5f;}
 
 <!-- ================= TRANSFER ================= -->
 <div id="transfer" class="card hidden">
-<h3>Transfer</h3>
+<h3>Employee Transfer</h3>
 
 <label>Name</label>
 <input id="t_name">
@@ -276,30 +305,18 @@ button:hover{background:#005f5f;}
 <label>Effective Date</label>
 <input id="t_date" type="date">
 
-<label>Reason</label>
-<select id="t_reason">
-  <option>Promotion</option>
-  <option>Restructure</option>
-  <option>Request</option>
-  <option>Management Decision</option>
-</select>
-
 <label>Email Required?</label>
 <select id="t_email" onchange="toggleTransferEmail()">
   <option>No</option>
   <option>Yes</option>
 </select>
 
-<div id="t_emailBox" style="display:none;">
-<label>Email Address</label>
-<input id="t_email_address">
+<div id="t_emailBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <div style="font-size:12px;color:#666;">
+    ✉ Email to create/update
+  </div>
+  <input id="t_email_address" placeholder="john.smith@company.com">
 </div>
-
-<label>Finpower Access</label>
-<select id="t_finpower">
-  <option>No</option>
-  <option>Yes</option>
-</select>
 
 <label>Network Share Folder?</label>
 <select id="t_share" onchange="toggleTransferShare()">
@@ -307,50 +324,22 @@ button:hover{background:#005f5f;}
   <option>Yes</option>
 </select>
 
-<div id="t_shareBox" style="display:none;">
-<label>Folder Path</label>
-<input id="t_share_folder">
+<div id="t_shareBox" style="display:none;background:#f8f9fa;padding:10px;border-radius:8px;margin-top:8px;">
+  <input id="t_share_folder" placeholder="/Finance/Reports">
 
-<label>Access Level</label>
-<select id="t_share_access">
-  <option>Read Only</option>
-  <option>Read/Write</option>
-  <option>Full Access</option>
-</select>
-</div>
+  <select id="t_share_access">
+    <option>Read Only</option>
+    <option>Read / Write</option>
+    <option>Full Control</option>
+  </select>
 
-<label>System Access Notes</label>
-<textarea id="t_access"></textarea>
-
-<label>Additional Apps?</label>
-<select id="t_apps" onchange="toggleTransferApps()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="t_appsBox" style="display:none;">
-<label>Apps List</label>
-<textarea id="t_app_list"></textarea>
-
-<label>Reason</label>
-<textarea id="t_app_reason"></textarea>
-
-<label>Email Justification</label>
-<textarea id="t_app_email"></textarea>
+  <textarea id="t_share_reason" placeholder="Reason"></textarea>
 </div>
 
 <label>Notes</label>
 <textarea id="t_notes"></textarea>
 
-<button onclick="save('transfer')">Submit Transfer</button>
-</div>
-
-<!-- ================= SEARCH ================= -->
-<div id="search" class="card hidden">
-<h3>Search</h3>
-<input id="searchInput" placeholder="Search name">
-<button onclick="searchData()">Search</button>
-<pre id="searchResult"></pre>
+<button onclick="save('transfer')">Submit</button>
 </div>
 
 </div>
@@ -361,30 +350,40 @@ button:hover{background:#005f5f;}
 <script>
 const users={hr:"hr123",it:"it123"};
 
+/* SESSION */
+window.onload=()=>{
+  if(localStorage.getItem("hr_login")==="1"){
+    loginPage.style.display="none";
+    system.classList.remove("hidden");
+  }
+};
+
 /* ENTER KEY */
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"){
-    if(!system.classList.contains("hidden")){
-      document.querySelector(".card:not(.hidden) button")?.click();
-    }else{
-      login();
-    }
+    if(system.classList.contains("hidden")) login();
+    else document.querySelector(".card:not(.hidden) button")?.click();
   }
 });
 
 /* LOGIN */
 function login(){
   if(users[username.value]===password.value){
+    localStorage.setItem("hr_login","1");
     loginPage.style.display="none";
     system.classList.remove("hidden");
+    error.innerText="";
   }else{
-    error.innerText="Wrong login";
+    error.innerText="❌ Invalid login credentials";
   }
 }
 
-function logout(){location.reload();}
+function logout(){
+  localStorage.removeItem("hr_login");
+  location.reload();
+}
 
-/* TAB */
+/* TABS */
 function show(id,el){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   el.classList.add("active");
@@ -392,7 +391,6 @@ function show(id,el){
   onboard.classList.add("hidden");
   offboard.classList.add("hidden");
   transfer.classList.add("hidden");
-  search.classList.add("hidden");
 
   document.getElementById(id).classList.remove("hidden");
 }
@@ -410,55 +408,23 @@ function save(type){
 
   if(type==="onboard"){
     obj.name=n_name.value;
-    obj.dept=n_dept.value;
-    obj.job=n_job.value;
-    obj.start=n_start.value;
     obj.email=n_email.value;
     obj.emailAddress=n_email_address.value;
-    obj.finpower=n_finpower.value;
-    obj.apps=n_apps.value;
-    obj.appList=n_app_list.value;
-    obj.appReason=n_app_reason.value;
-    obj.appEmail=n_app_email_reason.value;
+    obj.emailType=n_email_type.value;
     obj.share=n_share.value;
     obj.shareFolder=n_share_folder.value;
-    obj.shareAccess=n_share_access.value;
-  }
-
-  if(type==="offboard"){
-    obj.name=o_name.value;
-    obj.dept=o_dept.value;
-    obj.last=o_lastday.value;
-    obj.reason=o_reason.value;
   }
 
   if(type==="transfer"){
     obj.name=t_name.value;
-    obj.from=t_from.value;
-    obj.to=t_to.value;
-    obj.title=t_title.value;
-    obj.date=t_date.value;
-    obj.reason=t_reason.value;
     obj.email=t_email.value;
     obj.emailAddress=t_email_address.value;
-    obj.finpower=t_finpower.value;
     obj.share=t_share.value;
     obj.shareFolder=t_share_folder.value;
-    obj.shareAccess=t_share_access.value;
-    obj.apps=t_apps.value;
-    obj.appList=t_app_list.value;
-    obj.appReason=t_app_reason.value;
-    obj.appEmail=t_app_email.value;
-    obj.notes=t_notes.value;
   }
 
   console.log(obj);
   popup();
-}
-
-/* SEARCH */
-function searchData(){
-  searchResult.innerText="Search feature placeholder";
 }
 
 /* POPUP */
