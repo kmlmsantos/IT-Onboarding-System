@@ -8,36 +8,34 @@
 <style>
 
 /* ================= LOGIN ================= */
-#loginPage {
-  height: 100vh;
+#loginPage{
+  height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background: radial-gradient(circle at top, #0b5e5e, #062c2c);
-  font-family: Arial;
+  background: radial-gradient(circle at top,#0b5e5e,#062c2c);
+  font-family:Arial;
 }
 
-.login-card {
-  width: 340px;
-  padding: 30px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
+.login-card{
+  width:340px;
+  padding:30px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
   text-align:center;
   color:white;
 }
 
-.login-card input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 6px;
-  border: none;
+.login-card input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
 }
 
-.login-card button {
-  width: 100%;
-  padding: 12px;
+.login-card button{
+  width:100%;
+  padding:12px;
   background:#00b3b3;
   border:none;
   color:white;
@@ -45,21 +43,16 @@
   cursor:pointer;
 }
 
-#error {
-  color: #ff6b6b;
-  font-size: 13px;
-}
-
 /* ================= SYSTEM ================= */
-.hidden { display:none; }
+.hidden{display:none;}
 
-body {
+body{
   margin:0;
-  font-family: Arial;
+  font-family:Arial;
   background:#f4f7fa;
 }
 
-header {
+header{
   background:#007a7a;
   color:white;
   padding:15px;
@@ -67,54 +60,58 @@ header {
   justify-content:space-between;
 }
 
-.container {
-  max-width:1000px;
-  margin:auto;
-  padding:20px;
-}
+.container{max-width:1100px;margin:auto;padding:20px;}
 
-.card {
+.card{
   background:white;
   padding:20px;
   margin-top:15px;
   border-radius:10px;
 }
 
-.tab {
+.tab{
   display:inline-block;
   padding:10px;
   margin-right:5px;
   background:#ddd;
-  border-radius:6px;
   cursor:pointer;
+  border-radius:6px;
 }
 
-.tab.active {
-  background:#007a7a;
-  color:white;
-}
+.tab.active{background:#007a7a;color:white;}
 
-input, select {
+input,select,textarea{
   width:100%;
   padding:10px;
   margin:6px 0;
 }
 
-button {
+button{
   width:100%;
   padding:12px;
   background:#007a7a;
   color:white;
   border:none;
   border-radius:6px;
-  cursor:pointer;
 }
 
-.output {
+.output{
   background:#eef7f7;
   padding:15px;
   white-space:pre-line;
   border-left:5px solid #007a7a;
+}
+
+/* popup */
+#popup{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#007a7a;
+  color:white;
+  padding:12px 18px;
+  border-radius:8px;
+  display:none;
 }
 
 </style>
@@ -130,7 +127,7 @@ button {
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
 
-    <button onclick="login()">Sign In</button>
+    <button onclick="login()">Login</button>
     <p id="error"></p>
   </div>
 </div>
@@ -139,200 +136,258 @@ button {
 <div id="system" class="hidden">
 
 <header>
-  <div id="roleTitle">Onboarding System</div>
+  <div>Onboarding System</div>
   <button onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
-  <div class="card">
-    <div id="menu"></div>
-  </div>
+<!-- MENU -->
+<div class="card">
+  <div class="tab active" onclick="show('onboard')">Onboarding</div>
+  <div class="tab" onclick="show('offboard')">Offboarding</div>
+  <div class="tab" onclick="show('transfer')">Transfer</div>
+  <div class="tab" onclick="showSearch()">Search</div>
+</div>
 
-  <!-- ONBOARD -->
-  <div id="onboard" class="card hidden">
-    <h3>Onboarding</h3>
-    <input id="n_name" placeholder="Full Name">
-    <input id="n_dept" placeholder="Department">
-    <select id="n_email">
-      <option>Create Email</option>
-      <option>No Email Required</option>
-    </select>
-    <select id="n_fin">
-      <option>Grant FinPower Access</option>
-      <option>No Access</option>
-    </select>
-    <button onclick="submitOnboard()">Submit</button>
-  </div>
+<!-- ================= ONBOARDING ================= -->
+<div id="onboard" class="card">
 
-  <!-- OFFBOARD -->
-  <div id="offboard" class="card hidden">
-    <h3>Offboarding</h3>
-    <input id="o_name" placeholder="Full Name">
-    <input id="o_dept" placeholder="Department">
-    <select id="o_email">
-      <option>Disable Email Account</option>
-      <option>Keep Email Active</option>
-    </select>
-    <select id="o_fin">
-      <option>Revoke FinPower Access</option>
-      <option>Keep Access</option>
-    </select>
-    <select id="o_status">
-      <option>Deactivate Account</option>
-      <option>Keep Active</option>
-    </select>
-    <button onclick="submitOffboard()">Submit</button>
-  </div>
+<h3>New Employee Onboarding</h3>
 
-  <!-- TRANSFER -->
-  <div id="transfer" class="card hidden">
-    <h3>Department Transfer</h3>
-    <input id="t_name" placeholder="Full Name">
-    <input id="t_from" placeholder="From Department">
-    <input id="t_to" placeholder="To Department">
+<input id="n_name" placeholder="Full Name">
+<input id="n_contact" placeholder="Contact Number">
+<input id="n_job" placeholder="Job Title">
+<input id="n_dept" placeholder="Department">
+<input id="n_head" placeholder="Department Head">
 
-    <select id="t_email">
-      <option>Update Email Access</option>
-      <option>Reassign Email</option>
-      <option>No Change</option>
-    </select>
+<h4>Email Provisioning</h4>
+<select id="n_email">
+<option>YES</option><option>NO</option>
+</select>
 
-    <select id="t_fin">
-      <option>Update FinPower Access</option>
-      <option>Remove Access</option>
-      <option>No Change</option>
-    </select>
+<h4>FinPower Access</h4>
+<select id="n_fin">
+<option>YES</option><option>NO</option>
+</select>
 
-    <select id="t_status">
-      <option>Update Account Status</option>
-      <option>Keep Active</option>
-      <option>Deactivate Account</option>
-    </select>
+<h4>Network Folder Access</h4>
+<input id="n_folder" placeholder="Folder Name">
 
-    <button onclick="submitTransfer()">Submit</button>
-  </div>
+<h4>Software Access</h4>
+<textarea id="n_soft"></textarea>
 
-  <!-- OUTPUT -->
-  <div class="card">
-    <h3>System Output</h3>
-    <div id="output" class="output">No data</div>
-  </div>
+<h4>Notes</h4>
+<textarea id="n_notes"></textarea>
+
+<button onclick="save('onboard')">Submit</button>
+</div>
+
+<!-- ================= OFFBOARD ================= -->
+<div id="offboard" class="card hidden">
+
+<h3>Employee Offboarding</h3>
+
+<input id="o_name" placeholder="Full Name">
+<input id="o_dept" placeholder="Department">
+<input id="o_last" type="date">
+
+<h4>Email</h4>
+<select id="o_email">
+<option>Disable Email</option><option>Keep Active</option>
+</select>
+
+<h4>FinPower</h4>
+<select id="o_fin">
+<option>Revoke Access</option><option>Keep Access</option>
+</select>
+
+<h4>Network Folder</h4>
+<select id="o_folder">
+<option>Remove Access</option><option>Keep Access</option>
+</select>
+
+<h4>Reason</h4>
+<textarea id="o_reason"></textarea>
+
+<button onclick="save('offboard')">Submit</button>
+</div>
+
+<!-- ================= TRANSFER ================= -->
+<div id="transfer" class="card hidden">
+
+<h3>Department Transfer</h3>
+
+<input id="t_name" placeholder="Full Name">
+<input id="t_old" placeholder="From Department">
+<input id="t_new" placeholder="To Department">
+
+<h4>System Updates</h4>
+<select id="t_fin">
+<option>Update Access</option><option>No Change</option>
+</select>
+
+<select id="t_folder">
+<option>Update Folder</option><option>No Change</option>
+</select>
+
+<textarea id="t_notes"></textarea>
+
+<button onclick="save('transfer')">Submit</button>
+</div>
+
+<!-- ================= SEARCH ================= -->
+<div id="searchBox" class="card hidden">
+
+<h3>Search Records</h3>
+
+<input id="searchInput" placeholder="Search by name">
+<button onclick="searchData()">Search</button>
+
+<div id="searchResult" class="output">No data</div>
+</div>
 
 </div>
 </div>
+
+<!-- POPUP -->
+<div id="popup">Saved Successfully ✔</div>
 
 <script>
 
-/* ================= USERS ================= */
+/* ================= LOGIN ================= */
 const users = {
-  hr: { pass:"hr123", role:"HR" },
-  it: { pass:"it123", role:"IT" },
-  head: { pass:"head123", role:"Dept Head" }
+  hr:{pass:"hr123"},
+  it:{pass:"it123"},
+  head:{pass:"head123"}
 };
 
-let currentRole = "";
-
-/* ================= LOGIN ================= */
 function login(){
 
-  const u = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value.trim();
-  const error = document.getElementById("error");
+  const u=username.value.trim();
+  const p=password.value.trim();
 
-  error.innerText = "";
+  if(users[u] && users[u].pass===p){
 
-  if(users[u] && users[u].pass === p){
+    loginPage.style.display="none";   // FULL DISAPPEAR FIX
+    system.classList.remove("hidden");
 
-    currentRole = users[u].role;
-
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("system").classList.remove("hidden");
-
-    document.getElementById("roleTitle").innerText =
-      "System Access Granted: " + currentRole;
-
-    loadMenu();
-
-    /* ✅ FIX: AUTO OPEN FIRST PAGE */
-    if(currentRole === "HR") show("onboard");
-    else if(currentRole === "Dept Head") show("transfer");
-    else if(currentRole === "IT") show("transfer");
-
-  } else {
-    error.innerText = "❌ Access Denied: Invalid Credentials";
+  }else{
+    error.innerText="Wrong login details";
   }
 }
 
-/* ENTER KEY LOGIN */
-document.addEventListener("keydown", function(e){
-  if(e.key === "Enter") login();
+/* ENTER LOGIN */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter") login();
 });
 
-/* ================= MENU ================= */
-function loadMenu(){
+/* ================= STORAGE ================= */
+function getData(){
+  return JSON.parse(localStorage.getItem("hrData") || "[]");
+}
 
-  const menu = document.getElementById("menu");
-  menu.innerHTML = "";
+function setData(data){
+  localStorage.setItem("hrData", JSON.stringify(data));
+}
 
-  if(currentRole === "HR"){
-    menu.innerHTML += `<div class="tab" onclick="show('onboard')">Onboarding</div>`;
-    menu.innerHTML += `<div class="tab" onclick="show('offboard')">Offboarding</div>`;
-    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Department Transfer</div>`;
+/* ================= SAVE ================= */
+function save(type){
+
+  let record={type,time:new Date().toLocaleString()};
+
+  if(type==="onboard"){
+    record.name=n_name.value;
+    record.dept=n_dept.value;
+    record.job=n_job.value;
+    record.email=n_email.value;
+    record.fin=n_fin.value;
+    record.folder=n_folder.value;
+    record.notes=n_notes.value;
   }
 
-  if(currentRole === "Dept Head"){
-    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Department Transfer</div>`;
+  if(type==="offboard"){
+    record.name=o_name.value;
+    record.dept=o_dept.value;
+    record.last=o_last.value;
+    record.email=o_email.value;
+    record.fin=o_fin.value;
+    record.folder=o_folder.value;
+    record.reason=o_reason.value;
   }
 
-  if(currentRole === "IT"){
-    menu.innerHTML += `<div class="tab" onclick="show('transfer')">View Transfers</div>`;
+  if(type==="transfer"){
+    record.name=t_name.value;
+    record.from=t_old.value;
+    record.to=t_new.value;
+    record.fin=t_fin.value;
+    record.folder=t_folder.value;
+    record.notes=t_notes.value;
+  }
+
+  let data=getData();
+  data.push(record);
+  setData(data);
+
+  clearForm(type);
+  popup();
+}
+
+/* ================= CLEAR ================= */
+function clearForm(type){
+
+  if(type==="onboard"){
+    n_name.value=""; n_dept.value=""; n_job.value="";
+    n_folder.value=""; n_soft.value=""; n_notes.value="";
+  }
+
+  if(type==="offboard"){
+    o_name.value=""; o_dept.value=""; o_last.value="";
+    o_reason.value="";
+  }
+
+  if(type==="transfer"){
+    t_name.value=""; t_old.value=""; t_new.value="";
+    t_notes.value="";
   }
 }
 
-/* ================= SHOW ================= */
+/* ================= POPUP ================= */
+function popup(){
+  document.getElementById("popup").style.display="block";
+  setTimeout(()=>popup.style.display="none",2000);
+}
+
+/* ================= NAV ================= */
 function show(id){
 
-  document.getElementById("onboard").classList.add("hidden");
-  document.getElementById("offboard").classList.add("hidden");
-  document.getElementById("transfer").classList.add("hidden");
+  onboard.classList.add("hidden");
+  offboard.classList.add("hidden");
+  transfer.classList.add("hidden");
+  searchBox.classList.add("hidden");
 
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* ================= ACTIONS ================= */
-function submitOnboard(){
-  document.getElementById("output").innerText =
-`ONBOARDING REQUEST
-Name: ${document.getElementById("n_name").value}
-Department: ${document.getElementById("n_dept").value}
-Email: ${document.getElementById("n_email").value}
-FinPower: ${document.getElementById("n_fin").value}
-Status: ACTIVE`;
+function showSearch(){
+  show("searchBox");
 }
 
-function submitOffboard(){
-  document.getElementById("output").innerText =
-`OFFBOARDING REQUEST
-Name: ${document.getElementById("o_name").value}
-Department: ${document.getElementById("o_dept").value}
-Email: ${document.getElementById("o_email").value}
-FinPower: ${document.getElementById("o_fin").value}
-Account: ${document.getElementById("o_status").value}`;
+/* ================= SEARCH ================= */
+function searchData(){
+
+  let q=searchInput.value.toLowerCase();
+  let data=getData();
+
+  let res=data.filter(x=>x.name && x.name.toLowerCase().includes(q));
+
+  searchResult.innerText =
+  res.length
+  ? res.map(r=>`${r.type.toUpperCase()} | ${r.name} | ${r.dept || ""} → ${r.to || ""} | ${r.time}`).join("\n")
+  : "No records found";
 }
 
-function submitTransfer(){
-  document.getElementById("output").innerText =
-`DEPARTMENT TRANSFER REQUEST
-Name: ${document.getElementById("t_name").value}
-From: ${document.getElementById("t_from").value}
-To: ${document.getElementById("t_to").value}
-Email: ${document.getElementById("t_email").value}
-FinPower: ${document.getElementById("t_fin").value}
-Account: ${document.getElementById("t_status").value}`;
-}
-
-/* ================= LOGOUT ================= */
+/* LOGOUT */
 function logout(){
   location.reload();
 }
