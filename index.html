@@ -157,6 +157,32 @@ input,select,textarea{
   border:1px solid #ddd;
 }
 
+/* CONDITIONAL FORM STYLING */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 5px;
+}
+.form-group {
+  flex: 1;
+}
+.conditional-box {
+  background: #f4f9f9;
+  padding: 12px;
+  border-left: 4px solid #007a7a;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.info-tag {
+  font-size: 11px;
+  color: #555;
+  background: #e2eeee;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
 /* STATUS BOXES */
 .status-view-only {
   padding: 10px;
@@ -284,13 +310,86 @@ button.submit-btn{
   <div id="tab-transfer" class="tab" onclick="show('transfer',this)">Transfer</div>
 </div>
 
+<!-- IMPROVED ONBOARDING FORM -->
 <div id="onboard" class="card hr-only-element">
   <h3 id="form-title-onboard">Onboarding</h3>
-  <input id="n_name" placeholder="Full Name">
-  <input id="n_dept" placeholder="Department">
-  <input id="n_job" placeholder="Job Title">
-  <label for="n_start">Start Date (Cannot be in the past)</label>
-  <input id="n_start" type="date">
+  
+  <div class="form-row">
+    <div class="form-group">
+      <label>Full Name</label>
+      <input id="n_name" placeholder="Full Name">
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <input id="n_dept" placeholder="Department">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Job Title</label>
+      <input id="n_job" placeholder="Job Title">
+    </div>
+    <div class="form-group">
+      <label for="n_start">Start Date</label>
+      <input id="n_start" type="date">
+    </div>
+  </div>
+
+  <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+  <!-- Email Address Setup -->
+  <label>Create Email Address?</label>
+  <select id="n_email_toggle" onchange="toggleConditionalField('n_email_box', this.value)">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+  <div id="n_email_box" class="conditional-box hidden">
+    <label>Email Address to Create</label>
+    <input id="n_email_val" placeholder="Sample format: first.last@company.com">
+  </div>
+
+  <!-- FinPower Access -->
+  <label>FinPower Access Required?</label>
+  <select id="n_finpower">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+
+  <!-- Network Share Folder -->
+  <label>Network Share Folder Access?</label>
+  <select id="n_folder_toggle" onchange="toggleConditionalField('n_folder_box', this.value)">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+  <div id="n_folder_box" class="conditional-box hidden">
+    <label>Folder Name <span style="font-weight:normal; color:#666;">(Provide folder name only, NOT the path)</span></label>
+    <input id="n_folder_val" placeholder="e.g., Marketing-Shared">
+  </div>
+
+  <!-- Additional Software Setup -->
+  <label>Additional Software Installation Required?</label>
+  <span class="info-tag">Standard Pre-Installed Setup: Microsoft Office, Outlook, WhatsApp</span>
+  <select id="n_software_toggle" onchange="toggleConditionalField('n_software_box', this.value)">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+  <div id="n_software_box" class="conditional-box hidden">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Software Name(s)</label>
+        <input id="n_software_name" placeholder="e.g., Adobe Photoshop, AutoCAD">
+      </div>
+      <div class="form-group">
+        <label>Business Justification / Reason</label>
+        <input id="n_software_reason" placeholder="e.g., Required for graphic design workflow">
+      </div>
+    </div>
+  </div>
+
+  <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+  <label>Notes (Optional)</label>
   <textarea id="n_notes" placeholder="Notes (Optional)"></textarea>
   
   <div class="status-container">
@@ -305,7 +404,7 @@ button.submit-btn{
   <h3 id="form-title-offboard">Offboarding</h3>
   <input id="o_name" placeholder="Name">
   <input id="o_dept" placeholder="Department">
-  <label for="o_last">Last Date (Cannot be in the past)</label>
+  <label for="o_last">Last Date</label>
   <input id="o_last" type="date">
   <textarea id="o_notes" placeholder="Notes (Optional)"></textarea>
   
@@ -374,24 +473,20 @@ const users = { hr:"hr123", it:"it123" };
 let data = JSON.parse(localStorage.getItem("emp") || "[]");
 let editId = null; 
 
-// Track current session from localStorage on initialization
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
 
-/* CHECK EXISTING SESSION ON PAGE LOAD */
 window.addEventListener("DOMContentLoaded", () => {
   if (currentUser) {
     showSystemInterface();
   }
 });
 
-/* LOGIN */
 function login(){
   const u = username.value.toLowerCase();
   const p = password.value;
 
   if(users[u] === p){
     currentUser = u;
-    // Save current active identity to storage 
     localStorage.setItem("onboarding_session", currentUser);
     showSystemInterface();
     error.innerText = "";
@@ -400,7 +495,6 @@ function login(){
   }
 }
 
-/* SHARED HELPER TO SHOW THE SYSTEM INTERFACE */
 function showSystemInterface() {
   loginPage.style.display = "none";
   system.classList.remove("hidden");
@@ -410,7 +504,6 @@ function showSystemInterface() {
   render();
 }
 
-/* TOGGLE INTERFACE PERMISSIONS BASED ON ROLE */
 function setupRolePermissions() {
   const hrElements = document.querySelectorAll(".hr-only-element");
   const itElements = document.getElementById("itStatusCard");
@@ -425,7 +518,6 @@ function setupRolePermissions() {
   }
 }
 
-/* ENTER KEY LOGIN */
 document.addEventListener("keydown", function(e){
   const loginVisible = !document.getElementById("system").classList.contains("hidden");
   if(e.key === "Enter" && loginVisible === false){
@@ -433,14 +525,11 @@ document.addEventListener("keydown", function(e){
   }
 });
 
-/* LOGOUT */
 function logout(){
-  // Wipe session key clean so it prompts the user to authenticate again
   localStorage.removeItem("onboarding_session");
   location.reload();
 }
 
-/* DATE CHECKER */
 function isPastDate(dateString) {
   if (!dateString) return false; 
   const selectedDate = new Date(dateString);
@@ -450,7 +539,15 @@ function isPastDate(dateString) {
   return selectedDate < today;
 }
 
-/* HR SAVE & UPDATE FUNCTIONALITY WITH STRICT VALIDATION */
+function toggleConditionalField(targetId, value) {
+  const targetElement = document.getElementById(targetId);
+  if (value === "Yes") {
+    targetElement.classList.remove("hidden");
+  } else {
+    targetElement.classList.add("hidden");
+  }
+}
+
 function save(type){
   if (currentUser !== "hr") return; 
 
@@ -462,19 +559,52 @@ function save(type){
     inputDate = n_start.value;
     const job = n_job.value.trim();
 
-    // Check if any box is blank
     if(!name || !dept || !job || !inputDate) {
-      alert("❌ Error: Cannot submit. Please fill out all boxes (Name, Department, Job Title, and Start Date).");
+      alert("❌ Error: Cannot submit. Please fill out all options (Name, Department, Job Title, and Start Date).");
       return;
     }
 
-    customData = { job: job, start: inputDate, notes: n_notes.value };
+    const emailToggle = document.getElementById("n_email_toggle").value;
+    const emailVal = document.getElementById("n_email_val").value.trim();
+    const finpowerVal = document.getElementById("n_finpower").value;
+    const folderToggle = document.getElementById("n_folder_toggle").value;
+    const folderVal = document.getElementById("n_folder_val").value.trim();
+    const softwareToggle = document.getElementById("n_software_toggle").value;
+    const softwareName = document.getElementById("n_software_name").value.trim();
+    const softwareReason = document.getElementById("n_software_reason").value.trim();
+
+    if (emailToggle === "Yes" && !emailVal) {
+      alert("❌ Error: You requested email creation. Please enter the Email Address to create.");
+      return;
+    }
+    if (folderToggle === "Yes" && !folderVal) {
+      alert("❌ Error: You selected Network Folder access. Please provide the Folder Name.");
+      return;
+    }
+    if (softwareToggle === "Yes" && (!softwareName || !softwareReason)) {
+      alert("❌ Error: You selected custom software installation. Please provide both the Software Name and the Reason.");
+      return;
+    }
+
+    customData = { 
+      job: job, 
+      start: inputDate, 
+      notes: n_notes.value,
+      emailRequired: emailToggle,
+      emailAddress: emailToggle === "Yes" ? emailVal : "",
+      finpower: finpowerVal,
+      folderRequired: folderToggle,
+      folderName: folderToggle === "Yes" ? folderVal : "",
+      customSoftwareRequired: softwareToggle,
+      softwareList: softwareToggle === "Yes" ? softwareName : "",
+      softwareReason: softwareToggle === "Yes" ? softwareReason : ""
+    };
+
   } else if(type === 'Offboarding') {
     name = o_name.value.trim();
     dept = o_dept.value.trim();
     inputDate = o_last.value;
 
-    // Check if any box is blank
     if(!name || !dept || !inputDate) {
       alert("❌ Error: Cannot submit. Please fill out all boxes (Name, Department, and Last Date).");
       return;
@@ -487,7 +617,6 @@ function save(type){
     const toDept = t_to.value.trim();
     inputDate = "";
 
-    // Check if any box is blank
     if(!name || !dept || !toDept) {
       alert("❌ Error: Cannot submit. Please fill out all boxes (Name, From Dept, and To Dept).");
       return;
@@ -527,7 +656,6 @@ function save(type){
   render();
 }
 
-/* IT STATUS UPDATE FUNCTIONALITY */
 function saveItStatus() {
   if (!editId || currentUser !== "it") {
     alert("❌ Please select a record from the table first by clicking 'Update Status'.");
@@ -553,14 +681,25 @@ function saveItStatus() {
   render();
 }
 
-/* CLEAR FORMS */
 function clearForms(){
   n_name.value = ""; n_dept.value = ""; n_job.value = ""; n_start.value = ""; n_notes.value = ""; 
+  document.getElementById("n_email_toggle").value = "No";
+  document.getElementById("n_email_val").value = "";
+  document.getElementById("n_email_box").classList.add("hidden");
+  document.getElementById("n_finpower").value = "No";
+  document.getElementById("n_folder_toggle").value = "No";
+  document.getElementById("n_folder_val").value = "";
+  document.getElementById("n_folder_box").classList.add("hidden");
+  document.getElementById("n_software_toggle").value = "No";
+  document.getElementById("n_software_name").value = "";
+  document.getElementById("n_software_reason").value = "";
+  document.getElementById("n_software_box").classList.add("hidden");
+  
   document.getElementById("form-title-onboard").innerText = "Onboarding";
   document.getElementById("btn-onboard").innerText = "Submit";
 
   o_name.value = ""; o_dept.value = ""; o_last.value = ""; o_notes.value = ""; 
-  document.getElementById("form-title-offboard").innerText = "Offboarding";
+  document.getElementById("form-title-offboard").innerText = "Edit Offboarding File";
   document.getElementById("btn-offboard").innerText = "Submit";
 
   t_name.value = ""; t_from.value = ""; t_to.value = ""; t_notes.value = ""; 
@@ -568,7 +707,6 @@ function clearForms(){
   document.getElementById("btn-transfer").innerText = "Submit";
 }
 
-/* RENDER TABLE WITH DATE CREATED */
 function render(){
   let q = search.value?.toLowerCase() || "";
   let list = document.getElementById("list");
@@ -586,7 +724,6 @@ function render(){
     if(r.status === "In Progress") badgeClass = "badge-progress";
     if(r.status === "Completed") badgeClass = "badge-completed";
 
-    // Formats record creation time out of its unique timestamp ID
     let dateCreated = new Date(r.id).toLocaleDateString();
 
     let actionButtons = "";
@@ -615,7 +752,6 @@ function render(){
   });
 }
 
-/* HR EDIT TRIGGER */
 function edit(id){
   if(currentUser !== "hr") return;
   const record = data.find(r => r.id === id);
@@ -630,6 +766,22 @@ function edit(id){
     n_job.value = record.job || "";
     n_start.value = record.start || "";
     n_notes.value = record.notes || "";
+    
+    document.getElementById("n_email_toggle").value = record.emailRequired || "No";
+    document.getElementById("n_email_val").value = record.emailAddress || "";
+    toggleConditionalField('n_email_box', record.emailRequired || "No");
+
+    document.getElementById("n_finpower").value = record.finpower || "No";
+
+    document.getElementById("n_folder_toggle").value = record.folderRequired || "No";
+    document.getElementById("n_folder_val").value = record.folderName || "";
+    toggleConditionalField('n_folder_box', record.folderRequired || "No");
+
+    document.getElementById("n_software_toggle").value = record.customSoftwareRequired || "No";
+    document.getElementById("n_software_name").value = record.softwareList || "";
+    document.getElementById("n_software_reason").value = record.softwareReason || "";
+    toggleConditionalField('n_software_box', record.customSoftwareRequired || "No");
+
     document.getElementById("form-title-onboard").innerText = "Edit Onboarding File";
     document.getElementById("btn-onboard").innerText = "Save Changes";
   } 
@@ -655,7 +807,6 @@ function edit(id){
   window.scrollTo({ top: 150, behavior: 'smooth' });
 }
 
-/* IT EXCLUSIVE SELECTION TRIGGER */
 function selectForItUpdate(id) {
   const record = data.find(r => r.id === id);
   if(!record) return;
@@ -668,7 +819,6 @@ function selectForItUpdate(id) {
   window.scrollTo({ top: 100, behavior: 'smooth' });
 }
 
-/* DELETE */
 function del(id){
   if(currentUser !== "hr") return;
   if(confirm("Are you sure you want to delete this record?")){
@@ -680,8 +830,9 @@ function del(id){
   }
 }
 
-/* TAB SWITCHER */
+// Fixed display bug in tab switching logic
 function show(id,el){
+  if (currentUser !== 'hr') return;
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
 
@@ -692,7 +843,6 @@ function show(id,el){
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* POPUP */
 function popup(text){
   let p = document.getElementById("popup");
   p.innerText = text;
