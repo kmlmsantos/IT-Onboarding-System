@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise HR → IT Lifecycle System</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f4f7fa;
+}
+
+header {
+  background: linear-gradient(135deg, #004d4d, #007a7a);
+  color: white;
+  padding: 22px;
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  background: #ddd;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.tab.active {
+  background: #007a7a;
+  color: white;
+}
+
+h4 {
+  color: #006666;
+  border-left: 4px solid #007a7a;
+  padding-left: 10px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #007a7a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hidden { display:none; }
+
+.output {
+  background: #eef7f7;
+  padding: 15px;
+  border-left: 5px solid #007a7a;
+  white-space: pre-line;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>Enterprise HR → IT Lifecycle System</h2>
+<p>Onboarding | Offboarding | Internal Transfer Automation</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('onboard')">Onboarding</div>
+  <div class="tab" onclick="switchTab('offboard')">Offboarding</div>
+  <div class="tab" onclick="switchTab('transfer')">Department Transfer</div>
+</div>
+</div>
+
+<!-- ================= ONBOARD ================= -->
+<div id="onboard" class="card">
+
+<h3>New Employee Onboarding</h3>
+
+<form id="formOnboard">
+
+<h4>1. Employee Info</h4>
+<input id="n_name" placeholder="Full Name">
+<input id="n_contact" placeholder="Contact Number">
+<input id="n_job" placeholder="Job Title">
+<input id="n_dept" placeholder="Department">
+<input id="n_head" placeholder="Department Head">
+
+<h4>2. Email Provisioning</h4>
+<select id="n_emailReq" onchange="toggle('n_emailBox',this.value)">
+<option>NO</option><option>YES</option>
+</select>
+<div id="n_emailBox" class="hidden">
+<input id="n_email" placeholder="Email Address to Create">
+</div>
+
+<h4>3. FinPower Access</h4>
+<select id="n_finpower"><option>NO</option><option>YES</option></select>
+
+<h4>4. Network Folder Access</h4>
+<select id="n_folderReq" onchange="toggle('n_folderBox',this.value)">
+<option>NO</option><option>YES</option>
+</select>
+<div id="n_folderBox" class="hidden">
+<input id="n_folder" placeholder="Folder Name">
+</div>
+
+<h4>5. Software</h4>
+<select id="n_softReq" onchange="toggle('n_softBox',this.value)">
+<option>NO</option><option>YES</option>
+</select>
+<div id="n_softBox" class="hidden">
+<textarea id="n_soft"></textarea>
+</div>
+
+<h4>6. Notes</h4>
+<textarea id="n_notes"></textarea>
+
+<button type="submit">Generate Onboarding Record</button>
+</form>
+
+</div>
+
+<!-- ================= OFFBOARD ================= -->
+<div id="offboard" class="card hidden">
+
+<h3>Employee Offboarding</h3>
+
+<form id="formOffboard">
+
+<h4>Employee Info</h4>
+<input id="o_name" placeholder="Full Name">
+<input id="o_contact" placeholder="Contact Number">
+<input id="o_dept" placeholder="Department">
+
+<h4>Exit Details</h4>
+<input id="o_lastday" type="date">
+<textarea id="o_reason" placeholder="Reason for Exit"></textarea>
+
+<h4>IT Actions</h4>
+<select id="o_email"><option>Disable Email</option><option>Keep Active</option></select>
+<select id="o_fin"><option>Revoke FinPower</option><option>Keep Access</option></select>
+<select id="o_folder"><option>Remove Access</option><option>Keep Access</option></select>
+
+<textarea id="o_notes"></textarea>
+
+<button type="submit">Generate Offboarding Record</button>
+</form>
+
+</div>
+
+<!-- ================= TRANSFER ================= -->
+<div id="transfer" class="card hidden">
+
+<h3>Department Transfer / Movement</h3>
+
+<form id="formTransfer">
+
+<h4>Employee Info</h4>
+<input id="t_name" placeholder="Full Name">
+<input id="t_contact" placeholder="Contact Number">
+
+<h4>Current Department</h4>
+<input id="t_olddept" placeholder="Current Department">
+
+<h4>New Department (Moving To)</h4>
+<input id="t_newdept" placeholder="New Department / Our Department">
+
+<h4>System Updates</h4>
+<select id="t_fin"><option>Update Access</option><option>No Change</option></select>
+<select id="t_folder"><option>Update Folder Access</option><option>No Change</option></select>
+
+<textarea id="t_notes"></textarea>
+
+<button type="submit">Generate Transfer Record</button>
+</form>
+
+</div>
+
+<!-- OUTPUT -->
+<div class="card">
+<h3>IT System Output</h3>
+<div id="output" class="output">No record generated.</div>
+</div>
+
+</div>
+
+<script>
+
+function switchTab(tab){
+  document.querySelectorAll('.card form').forEach(f=>f.closest('.card').classList.add('hidden'));
+  document.getElementById('onboard').classList.add('hidden');
+  document.getElementById('offboard').classList.add('hidden');
+  document.getElementById('transfer').classList.add('hidden');
+
+  document.getElementById(tab).classList.remove('hidden');
+
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function toggle(id,val){
+  document.getElementById(id).classList.toggle('hidden', val !== "YES");
+}
+
+/* ================= ONBOARD ================= */
+document.getElementById("formOnboard").onsubmit = function(e){
+e.preventDefault();
+
+let name = n_name.value;
+let username = name.split(" ")[0][0].toUpperCase()+name.split(" ").pop();
+
+output.innerText =
+`ONBOARDING REQUEST
+
+Name: ${name}
+Department: ${n_dept.value}
+Email Req: ${n_emailReq.value}
+FinPower: ${n_finpower.value}
+Folder: ${n_folderReq.value}
+Software: ${n_softReq.value}
+Notes: ${n_notes.value}`;
+};
+
+/* OFFBOARD */
+document.getElementById("formOffboard").onsubmit = function(e){
+e.preventDefault();
+
+output.innerText =
+`OFFBOARDING REQUEST
+
+Name: ${o_name.value}
+Department: ${o_dept.value}
+Last Day: ${o_lastday.value}
+Reason: ${o_reason.value}
+Email: ${o_email.value}
+FinPower: ${o_fin.value}
+Folder: ${o_folder.value}`;
+};
+
+/* TRANSFER */
+document.getElementById("formTransfer").onsubmit = function(e){
+e.preventDefault();
+
+output.innerText =
+`DEPARTMENT TRANSFER
+
+Name: ${t_name.value}
+From: ${t_olddept.value}
+To: ${t_newdept.value}
+FinPower: ${t_fin.value}
+Folder: ${t_folder.value}`;
+};
+
+</script>
+
+</body>
+</html>
