@@ -14,40 +14,35 @@
   justify-content:center;
   align-items:center;
   background: radial-gradient(circle at top, #0b5e5e, #062c2c);
-  font-family: Arial, sans-serif;
+  font-family: Arial;
 }
 
 .login-card {
   width: 340px;
-  padding: 35px;
-  border-radius: 14px;
+  padding: 30px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-  text-align: center;
-  color: white;
+  backdrop-filter: blur(10px);
+  text-align:center;
+  color:white;
 }
 
 .login-card input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   margin: 8px 0;
+  border-radius: 6px;
   border: none;
-  border-radius: 8px;
-  outline: none;
 }
 
 .login-card button {
   width: 100%;
   padding: 12px;
-  margin-top: 10px;
-  background: #00b3b3;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
+  background:#00b3b3;
+  border:none;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 #error {
@@ -70,11 +65,10 @@ header {
   padding:15px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
 .container {
-  max-width:1100px;
+  max-width:1000px;
   margin:auto;
   padding:20px;
 }
@@ -84,7 +78,6 @@ header {
   padding:20px;
   margin-top:15px;
   border-radius:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
 
 .tab {
@@ -92,8 +85,8 @@ header {
   padding:10px;
   margin-right:5px;
   background:#ddd;
-  cursor:pointer;
   border-radius:6px;
+  cursor:pointer;
 }
 
 .tab.active {
@@ -101,7 +94,7 @@ header {
   color:white;
 }
 
-input {
+input, select {
   width:100%;
   padding:10px;
   margin:6px 0;
@@ -156,30 +149,73 @@ button {
     <div id="menu"></div>
   </div>
 
+  <!-- ONBOARD -->
   <div id="onboard" class="card hidden">
     <h3>Onboarding</h3>
     <input id="n_name" placeholder="Full Name">
     <input id="n_dept" placeholder="Department">
+    <select id="n_email">
+      <option>Create Email</option>
+      <option>No Email Required</option>
+    </select>
+    <select id="n_fin">
+      <option>Grant FinPower Access</option>
+      <option>No Access</option>
+    </select>
     <button onclick="submitOnboard()">Submit</button>
   </div>
 
+  <!-- OFFBOARD -->
   <div id="offboard" class="card hidden">
     <h3>Offboarding</h3>
     <input id="o_name" placeholder="Full Name">
     <input id="o_dept" placeholder="Department">
+    <select id="o_email">
+      <option>Disable Email Account</option>
+      <option>Keep Email Active</option>
+    </select>
+    <select id="o_fin">
+      <option>Revoke FinPower Access</option>
+      <option>Keep Access</option>
+    </select>
+    <select id="o_status">
+      <option>Deactivate Account</option>
+      <option>Keep Active</option>
+    </select>
     <button onclick="submitOffboard()">Submit</button>
   </div>
 
+  <!-- TRANSFER -->
   <div id="transfer" class="card hidden">
-    <h3>Transfer</h3>
+    <h3>Department Transfer</h3>
     <input id="t_name" placeholder="Full Name">
-    <input id="t_from" placeholder="From Dept">
-    <input id="t_to" placeholder="To Dept">
+    <input id="t_from" placeholder="From Department">
+    <input id="t_to" placeholder="To Department">
+
+    <select id="t_email">
+      <option>Update Email Access</option>
+      <option>Reassign Email</option>
+      <option>No Change</option>
+    </select>
+
+    <select id="t_fin">
+      <option>Update FinPower Access</option>
+      <option>Remove Access</option>
+      <option>No Change</option>
+    </select>
+
+    <select id="t_status">
+      <option>Update Account Status</option>
+      <option>Keep Active</option>
+      <option>Deactivate Account</option>
+    </select>
+
     <button onclick="submitTransfer()">Submit</button>
   </div>
 
+  <!-- OUTPUT -->
   <div class="card">
-    <h3>Output</h3>
+    <h3>System Output</h3>
     <div id="output" class="output">No data</div>
   </div>
 
@@ -197,49 +233,64 @@ const users = {
 
 let currentRole = "";
 
-/* ================= LOGIN FIXED ================= */
+/* ================= LOGIN ================= */
 function login(){
-  const u = document.getElementById("username").value;
-  const p = document.getElementById("password").value;
+
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
   const error = document.getElementById("error");
+
+  error.innerText = "";
 
   if(users[u] && users[u].pass === p){
 
     currentRole = users[u].role;
 
-    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("loginPage").style.display = "none";
     document.getElementById("system").classList.remove("hidden");
 
     document.getElementById("roleTitle").innerText =
-      "Logged in as: " + currentRole;
+      "System Access Granted: " + currentRole;
 
     loadMenu();
 
+    /* ✅ FIX: AUTO OPEN FIRST PAGE */
+    if(currentRole === "HR") show("onboard");
+    else if(currentRole === "Dept Head") show("transfer");
+    else if(currentRole === "IT") show("transfer");
+
   } else {
-    error.innerText = "Invalid login";
+    error.innerText = "❌ Access Denied: Invalid Credentials";
   }
 }
 
+/* ENTER KEY LOGIN */
+document.addEventListener("keydown", function(e){
+  if(e.key === "Enter") login();
+});
+
 /* ================= MENU ================= */
 function loadMenu(){
+
   const menu = document.getElementById("menu");
   menu.innerHTML = "";
 
   if(currentRole === "HR"){
     menu.innerHTML += `<div class="tab" onclick="show('onboard')">Onboarding</div>`;
     menu.innerHTML += `<div class="tab" onclick="show('offboard')">Offboarding</div>`;
+    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Department Transfer</div>`;
   }
 
   if(currentRole === "Dept Head"){
-    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Transfer Request</div>`;
+    menu.innerHTML += `<div class="tab" onclick="show('transfer')">Department Transfer</div>`;
   }
 
   if(currentRole === "IT"){
-    menu.innerHTML += `<div class="tab" onclick="show('transfer')">View Requests</div>`;
+    menu.innerHTML += `<div class="tab" onclick="show('transfer')">View Transfers</div>`;
   }
 }
 
-/* ================= SHOW FIXED ================= */
+/* ================= SHOW ================= */
 function show(id){
 
   document.getElementById("onboard").classList.add("hidden");
@@ -252,27 +303,33 @@ function show(id){
 /* ================= ACTIONS ================= */
 function submitOnboard(){
   document.getElementById("output").innerText =
-`ONBOARD REQUEST
+`ONBOARDING REQUEST
 Name: ${document.getElementById("n_name").value}
-Dept: ${document.getElementById("n_dept").value}
-Role: ${currentRole}`;
+Department: ${document.getElementById("n_dept").value}
+Email: ${document.getElementById("n_email").value}
+FinPower: ${document.getElementById("n_fin").value}
+Status: ACTIVE`;
 }
 
 function submitOffboard(){
   document.getElementById("output").innerText =
-`OFFBOARD REQUEST
+`OFFBOARDING REQUEST
 Name: ${document.getElementById("o_name").value}
-Dept: ${document.getElementById("o_dept").value}
-Role: ${currentRole}`;
+Department: ${document.getElementById("o_dept").value}
+Email: ${document.getElementById("o_email").value}
+FinPower: ${document.getElementById("o_fin").value}
+Account: ${document.getElementById("o_status").value}`;
 }
 
 function submitTransfer(){
   document.getElementById("output").innerText =
-`TRANSFER REQUEST
+`DEPARTMENT TRANSFER REQUEST
 Name: ${document.getElementById("t_name").value}
 From: ${document.getElementById("t_from").value}
 To: ${document.getElementById("t_to").value}
-Role: ${currentRole}`;
+Email: ${document.getElementById("t_email").value}
+FinPower: ${document.getElementById("t_fin").value}
+Account: ${document.getElementById("t_status").value}`;
 }
 
 /* ================= LOGOUT ================= */
