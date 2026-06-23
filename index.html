@@ -1,3 +1,6 @@
+**Role-Based Submit Safeguards:** The script now checks the active role during execution to ensure IT cannot inadvertently call form-saving functions.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,7 +78,7 @@ body{margin:0;background:#eef3f7;}
 }
 
 /* ================= SYSTEM ================= */
-.hidden{display:none;}
+.hidden{display:none !important;}
 
 header{
   background:#007a7a;
@@ -157,6 +160,23 @@ input,select,textarea{
   border:1px solid #ddd;
 }
 
+/* STATUS BOXES */
+.status-view-only {
+  padding: 10px;
+  background: #f0f4f4;
+  border-radius: 8px;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+.status-edit-box {
+  padding: 15px;
+  background: #eef7f7;
+  border: 1px dashed #007a7a;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
 /* TABLE */
 table{
   width:100%;
@@ -181,6 +201,19 @@ th,td{
 .edit{background:#ffc107;}
 .delete{background:#ff4d4d;color:white;}
 .print{background:#17a2b8;color:white;}
+.save-status-btn{background:#28a745; color:white; font-weight:bold; margin-top:10px;}
+
+/* STATUS BADGES */
+.badge {
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:11px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+.badge-pending { background:#ffeeba; color:#856404; }
+.badge-progress { background:#b8daff; color:#004085; }
+.badge-completed { background:#c3e6cb; color:#155724; }
 
 /* SUBMIT */
 button.submit-btn{
@@ -204,6 +237,7 @@ button.submit-btn{
   padding:10px 14px;
   border-radius:8px;
   display:none;
+  z-index: 1000;
 }
 
 /* ERROR */
@@ -217,93 +251,114 @@ button.submit-btn{
 
 <body>
 
-<!-- LOGIN -->
 <div id="loginPage">
   <div class="login-wrap">
     <div class="login-card">
-
       <h2>Employee Onboarding System</h2>
       <p>Secure HR Access Portal</p>
-
       <input id="username" placeholder="Username">
       <input id="password" type="password" placeholder="Password">
-
       <button onclick="login()">Login</button>
-
-      <div class="small">
-        Onboarding • Transfers • Offboarding
-      </div>
-
+      <div class="small">Onboarding • Transfers • Offboarding</div>
       <div id="error"></div>
-
     </div>
   </div>
 </div>
 
-<!-- SYSTEM -->
 <div id="system" class="hidden">
-
 <header>
-  <div>Employee Onboarding System</div>
+  <div>Employee Onboarding System (<span id="userRoleDisplay" style="text-transform: uppercase; font-weight: bold;"></span> Portal)</div>
   <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
-<!-- SEARCH -->
 <div class="card">
   <h3>Search Records</h3>
   <div class="search-box">
-    <input id="search" placeholder="Search name / dept / type">
+    <input id="search" placeholder="Search name / dept / type / status">
     <button onclick="render()">Search</button>
   </div>
 </div>
 
-<!-- TABS -->
+<div class="card hr-only-element">
+  <div id="tab-onboard" class="tab active" onclick="show('onboard',this)">Onboarding</div>
+  <div id="tab-offboard" class="tab" onclick="show('offboard',this)">Offboarding</div>
+  <div id="tab-transfer" class="tab" onclick="show('transfer',this)">Transfer</div>
+</div>
+
+<div id="onboard" class="card hr-only-element">
+  <h3 id="form-title-onboard">Onboarding</h3>
+  <input id="n_name" placeholder="Full Name">
+  <input id="n_dept" placeholder="Department">
+  <input id="n_job" placeholder="Job Title">
+  <label for="n_start">Start Date (Cannot be in the past)</label>
+  <input id="n_start" type="date">
+  <textarea id="n_notes" placeholder="Notes"></textarea>
+  
+  <div class="status-container">
+    <label>Status</label>
+    <div class="status-view-only">Pending</div>
+  </div>
+  
+  <button id="btn-onboard" class="submit-btn" onclick="save('Onboarding')">Submit</button>
+</div>
+
+<div id="offboard" class="card hidden hr-only-element">
+  <h3 id="form-title-offboard">Offboarding</h3>
+  <input id="o_name" placeholder="Name">
+  <input id="o_dept" placeholder="Department">
+  <label for="o_last">Last Date (Cannot be in the past)</label>
+  <input id="o_last" type="date">
+  <textarea id="o_notes" placeholder="Notes"></textarea>
+  
+  <div class="status-container">
+    <label>Status</label>
+    <div class="status-view-only">Pending</div>
+  </div>
+  
+  <button id="btn-offboard" class="submit-btn" onclick="save('Offboarding')">Submit</button>
+</div>
+
+<div id="transfer" class="card hidden hr-only-element">
+  <h3 id="form-title-transfer">Transfer</h3>
+  <input id="t_name" placeholder="Name">
+  <input id="t_from" placeholder="From Dept">
+  <input id="t_to" placeholder="To Dept">
+  <textarea id="t_notes" placeholder="Notes"></textarea>
+  
+  <div class="status-container">
+    <label>Status</label>
+    <div class="status-view-only">Pending</div>
+  </div>
+  
+  <button id="btn-transfer" class="submit-btn" onclick="save('Transfer')">Submit</button>
+</div>
+
+<div id="itStatusCard" class="card hidden">
+  <h3 id="it-card-title">Update Record Status</h3>
+  <p id="it-card-desc">Select a record from the table below to quickly update its provisioning status.</p>
+  <div class="status-edit-box">
+    <strong id="it-target-name">No Record Selected</strong> <span id="it-target-type"></span>
+    <label for="it_status_select">Set Deployment Status:</label>
+    <select id="it_status_select">
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+    </select>
+    <button class="action-btn save-status-btn" onclick="saveItStatus()">Update Status</button>
+  </div>
+</div>
+
 <div class="card">
-  <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
-  <div class="tab" onclick="show('offboard',this)">Offboarding</div>
-  <div class="tab" onclick="show('transfer',this)">Transfer</div>
-</div>
-
-<!-- FORMS -->
-<div id="onboard" class="card">
-<h3>Onboarding</h3>
-<input id="n_name" placeholder="Full Name">
-<input id="n_dept" placeholder="Department">
-<input id="n_job" placeholder="Job Title">
-<input id="n_start" type="date">
-<textarea id="n_notes" placeholder="Notes"></textarea>
-<button class="submit-btn" onclick="save('Onboarding')">Submit</button>
-</div>
-
-<div id="offboard" class="card hidden">
-<h3>Offboarding</h3>
-<input id="o_name" placeholder="Name">
-<input id="o_dept" placeholder="Department">
-<input id="o_last" type="date">
-<textarea id="o_notes"></textarea>
-<button class="submit-btn" onclick="save('Offboarding')">Submit</button>
-</div>
-
-<div id="transfer" class="card hidden">
-<h3>Transfer</h3>
-<input id="t_name" placeholder="Name">
-<input id="t_from" placeholder="From Dept">
-<input id="t_to" placeholder="To Dept">
-<textarea id="t_notes"></textarea>
-<button class="submit-btn" onclick="save('Transfer')">Submit</button>
-</div>
-
-<!-- TABLE -->
-<div class="card">
-<h3>Records</h3>
+<h3>Records Table</h3>
 <table>
 <thead>
 <tr>
 <th>Name</th>
 <th>Type</th>
 <th>Dept</th>
+<th>Status</th>
 <th>Actions</th>
 </tr>
 </thead>
@@ -318,17 +373,22 @@ button.submit-btn{
 
 <script>
 const users = { hr:"hr123", it:"it123" };
-
 let data = JSON.parse(localStorage.getItem("emp") || "[]");
+let editId = null; 
+let currentUser = ""; 
 
 /* LOGIN */
 function login(){
-  const u = username.value;
+  const u = username.value.toLowerCase();
   const p = password.value;
 
   if(users[u] === p){
+    currentUser = u;
     loginPage.style.display = "none";
     system.classList.remove("hidden");
+    document.getElementById("userRoleDisplay").innerText = currentUser;
+    
+    setupRolePermissions();
     render();
     error.innerText = "";
   } else {
@@ -336,10 +396,26 @@ function login(){
   }
 }
 
-/* ENTER KEY LOGIN FIX */
+/* TOGGLE INTERFACE PERMISSIONS BASED ON ROLE */
+function setupRolePermissions() {
+  const hrElements = document.querySelectorAll(".hr-only-element");
+  const itElements = document.getElementById("itStatusCard");
+
+  if (currentUser === "hr") {
+    hrElements.forEach(el => el.classList.remove("hidden"));
+    itElements.classList.add("hidden");
+    // Ensure standard view starts on onboarding tab
+    show('onboard', document.getElementById("tab-onboard"));
+  } else {
+    // IT profile completely strips creation/tab configurations away
+    hrElements.forEach(el => el.classList.add("hidden"));
+    itElements.classList.remove("hidden");
+  }
+}
+
+/* ENTER KEY LOGIN */
 document.addEventListener("keydown", function(e){
   const loginVisible = !document.getElementById("system").classList.contains("hidden");
-
   if(e.key === "Enter" && loginVisible === false){
     login();
   }
@@ -350,22 +426,119 @@ function logout(){
   location.reload();
 }
 
-/* SAVE */
-function save(type){
-  let obj = {
-    id: Date.now(),
-    name: n_name.value || o_name.value || t_name.value,
-    dept: n_dept.value || o_dept.value || t_from.value,
-    type: type
-  };
+/* DATE CHECKER */
+function isPastDate(dateString) {
+  if (!dateString) return false; 
+  const selectedDate = new Date(dateString);
+  selectedDate.setHours(0,0,0,0);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return selectedDate < today;
+}
 
-  data.push(obj);
+/* HR SAVE & UPDATE FUNCTIONALITY */
+function save(type){
+  if (currentUser !== "hr") return; // Safety Lock
+
+  let name, dept, inputDate, customData = {};
+
+  if(type === 'Onboarding'){
+    name = n_name.value;
+    dept = n_dept.value;
+    inputDate = n_start.value;
+    customData = { job: n_job.value, start: n_start.value, notes: n_notes.value };
+  } else if(type === 'Offboarding') {
+    name = o_name.value;
+    dept = o_dept.value;
+    inputDate = o_last.value;
+    customData = { last: o_last.value, notes: o_notes.value };
+  } else if(type === 'Transfer') {
+    name = t_name.value;
+    dept = t_from.value; 
+    inputDate = "";
+    customData = { to: t_to.value, notes: t_notes.value };
+  }
+
+  if(!name || !dept) {
+    alert("❌ Please fill out Name and Department.");
+    return;
+  }
+
+  if(inputDate && isPastDate(inputDate)) {
+    alert("❌ Error: You cannot select a date in the past!");
+    return;
+  }
+
+  if(editId) {
+    data = data.map(r => {
+      if(r.id === editId) {
+        // Keep existing status value untouched during an HR edit update
+        return { id: r.id, type: type, name: name, dept: dept, status: r.status, ...customData };
+      }
+      return r;
+    });
+    editId = null; 
+  } else {
+    let obj = {
+      id: Date.now(),
+      type: type,
+      name: name,
+      dept: dept,
+      status: "Pending", // Brand new inputs naturally initialize as Pending
+      ...customData
+    };
+    data.push(obj);
+  }
+
   localStorage.setItem("emp", JSON.stringify(data));
-  popup();
+  popup("Saved ✔");
+  clearForms();
   render();
 }
 
-/* RENDER */
+/* IT STATUS UPDATE FUNCTIONALITY */
+function saveItStatus() {
+  if (!editId || currentUser !== "it") {
+    alert("❌ Please select a record from the table first by clicking 'Update Status'.");
+    return;
+  }
+  
+  const statusValue = document.getElementById("it_status_select").value;
+  
+  data = data.map(r => {
+    if(r.id === editId) {
+      return { ...r, status: statusValue };
+    }
+    return r;
+  });
+  
+  localStorage.setItem("emp", JSON.stringify(data));
+  popup("Status Updated ✔");
+  
+  // Reset selection panel
+  editId = null;
+  document.getElementById("it-target-name").innerText = "No Record Selected";
+  document.getElementById("it-target-type").innerText = "";
+  
+  render();
+}
+
+/* CLEAR FORMS */
+function clearForms(){
+  n_name.value = ""; n_dept.value = ""; n_job.value = ""; n_start.value = ""; n_notes.value = ""; 
+  document.getElementById("form-title-onboard").innerText = "Onboarding";
+  document.getElementById("btn-onboard").innerText = "Submit";
+
+  o_name.value = ""; o_dept.value = ""; o_last.value = ""; o_notes.value = ""; 
+  document.getElementById("form-title-offboard").innerText = "Offboarding";
+  document.getElementById("btn-offboard").innerText = "Submit";
+
+  t_name.value = ""; t_from.value = ""; t_to.value = ""; t_notes.value = ""; 
+  document.getElementById("form-title-transfer").innerText = "Transfer";
+  document.getElementById("btn-transfer").innerText = "Submit";
+}
+
+/* RENDER TABLE */
 function render(){
   let q = search.value?.toLowerCase() || "";
   let list = document.getElementById("list");
@@ -375,46 +548,122 @@ function render(){
   .filter(r =>
     r.name.toLowerCase().includes(q) ||
     r.dept.toLowerCase().includes(q) ||
-    r.type.toLowerCase().includes(q)
+    r.type.toLowerCase().includes(q) ||
+    r.status.toLowerCase().includes(q)
   )
   .forEach(r => {
+    let badgeClass = "badge-pending";
+    if(r.status === "In Progress") badgeClass = "badge-progress";
+    if(r.status === "Completed") badgeClass = "badge-completed";
+
+    // Dynamic actions column UI according to the structural active identity 
+    let actionButtons = "";
+    if (currentUser === "hr") {
+      actionButtons = `
+        <button class="action-btn edit" onclick="edit(${r.id})">Edit</button>
+        <button class="action-btn delete" onclick="del(${r.id})">Del</button>
+      `;
+    } else if (currentUser === "it") {
+      actionButtons = `
+        <button class="action-btn edit" style="background:#007a7a; color:white;" onclick="selectForItUpdate(${r.id})">Update Status</button>
+      `;
+    }
+    // Shared functionality actions
+    actionButtons += `<button class="action-btn print" onclick="window.print()">Print</button>`;
+
     list.innerHTML += `
       <tr>
         <td>${r.name}</td>
         <td>${r.type}</td>
         <td>${r.dept}</td>
-        <td>
-          <button class="action-btn edit">Edit</button>
-          <button class="action-btn delete" onclick="del(${r.id})">Del</button>
-          <button class="action-btn print" onclick="window.print()">Print</button>
-        </td>
+        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+        <td>${actionButtons}</td>
       </tr>
     `;
   });
 }
 
-/* DELETE */
-function del(id){
-  data = data.filter(r => r.id !== id);
-  localStorage.setItem("emp", JSON.stringify(data));
-  render();
+/* HR EDIT TRIGGER */
+function edit(id){
+  if(currentUser !== "hr") return;
+  const record = data.find(r => r.id === id);
+  if(!record) return;
+
+  editId = record.id;
+  
+  if(record.type === "Onboarding") {
+    show('onboard', document.getElementById("tab-onboard"));
+    n_name.value = record.name;
+    n_dept.value = record.dept;
+    n_job.value = record.job || "";
+    n_start.value = record.start || "";
+    n_notes.value = record.notes || "";
+    document.getElementById("form-title-onboard").innerText = "Edit Onboarding File";
+    document.getElementById("btn-onboard").innerText = "Save Changes";
+  } 
+  else if(record.type === "Offboarding") {
+    show('offboard', document.getElementById("tab-offboard"));
+    o_name.value = record.name;
+    o_dept.value = record.dept;
+    o_last.value = record.last || "";
+    o_notes.value = record.notes || "";
+    document.getElementById("form-title-offboard").innerText = "Edit Offboarding File";
+    document.getElementById("btn-offboard").innerText = "Save Changes";
+  } 
+  else if(record.type === "Transfer") {
+    show('transfer', document.getElementById("tab-transfer"));
+    t_name.value = record.name;
+    t_from.value = record.dept;
+    t_to.value = record.to || "";
+    t_notes.value = record.notes || "";
+    document.getElementById("form-title-transfer").innerText = "Edit Transfer File";
+    document.getElementById("btn-transfer").innerText = "Save Changes";
+  }
+  
+  window.scrollTo({ top: 150, behavior: 'smooth' });
 }
 
-/* TAB */
+/* IT EXCLUSIVE SELECTION TRIGGER */
+function selectForItUpdate(id) {
+  const record = data.find(r => r.id === id);
+  if(!record) return;
+  
+  editId = record.id;
+  document.getElementById("it-target-name").innerText = record.name;
+  document.getElementById("it-target-type").innerText = `(${record.type})`;
+  document.getElementById("it_status_select").value = record.status || "Pending";
+  
+  window.scrollTo({ top: 100, behavior: 'smooth' });
+}
+
+/* DELETE */
+function del(id){
+  if(currentUser !== "hr") return;
+  if(confirm("Are you sure you want to delete this record?")){
+    data = data.filter(r => r.id !== id);
+    localStorage.setItem("emp", JSON.stringify(data));
+    if(editId === id) editId = null; 
+    clearForms();
+    render();
+  }
+}
+
+/* TAB SWITCHER */
 function show(id,el){
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
 
-  onboard.classList.add("hidden");
-  offboard.classList.add("hidden");
-  transfer.classList.add("hidden");
+  document.getElementById("onboard").classList.add("hidden");
+  document.getElementById("offboard").classList.add("hidden");
+  document.getElementById("transfer").classList.add("hidden");
 
   document.getElementById(id).classList.remove("hidden");
 }
 
 /* POPUP */
-function popup(){
+function popup(text){
   let p = document.getElementById("popup");
+  p.innerText = text;
   p.style.display = "block";
   setTimeout(()=>p.style.display="none",2000);
 }
@@ -422,3 +671,5 @@ function popup(){
 
 </body>
 </html>
+
+```
