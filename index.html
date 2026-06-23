@@ -9,44 +9,72 @@
 *{box-sizing:border-box;font-family:Arial;}
 body{margin:0;background:#eef3f7;}
 
-/* LOGIN */
+/* ================= LOGIN ================= */
 #loginPage{
+  height:100vh;
+  overflow:hidden;
+  background:linear-gradient(135deg,#062c2c,#0b5e5e,#0e8c8c);
+  background-size:300% 300%;
+  animation:bg 10s ease infinite;
+}
+
+@keyframes bg{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+.login-wrap{
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#0b5e5e,#062c2c);
 }
 
 .login-card{
-  width:320px;
-  padding:25px;
-  border-radius:12px;
+  width:360px;
+  padding:30px;
+  border-radius:16px;
   background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.2);
   color:white;
   text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
 }
+
+.login-card h2{margin:0;font-size:20px;}
+.login-card p{margin:6px 0 18px;font-size:12px;opacity:0.85;}
 
 .login-card input{
   width:100%;
-  padding:10px;
-  margin:6px 0;
+  padding:11px;
+  margin:7px 0;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.15);
+  color:white;
+  outline:none;
 }
 
 .login-card button{
   width:100%;
-  padding:10px;
-  margin-top:10px;
+  padding:11px;
+  margin-top:14px;
   border:none;
-  border-radius:8px;
-  background:#00b3b3;
-  color:white;
+  border-radius:10px;
+  background:#00d4d4;
+  font-weight:700;
+  cursor:pointer;
 }
 
-/* SYSTEM */
+.small{
+  font-size:11px;
+  opacity:0.7;
+  margin-top:10px;
+}
+
+/* ================= SYSTEM ================= */
 .hidden{display:none;}
 
 header{
@@ -55,6 +83,39 @@ header{
   padding:12px 18px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
+}
+
+.logout-btn{
+  padding:8px 14px;
+  border-radius:8px;
+  border:none;
+  background:#ff4d4d;
+  color:white;
+  cursor:pointer;
+}
+
+/* SEARCH */
+.search-box{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.search-box input{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+.search-box button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  background:#007a7a;
+  color:white;
+  cursor:pointer;
 }
 
 .container{
@@ -92,23 +153,45 @@ input,select,textarea{
   width:100%;
   padding:10px;
   margin-top:5px;
+  border-radius:8px;
   border:1px solid #ddd;
-  border-radius:8px;
 }
 
-textarea{height:70px;}
-
-.helper{
-  font-size:12px;
-  color:#666;
-  margin-top:4px;
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
 }
 
-.box{
-  background:#f8f9fa;
-  padding:10px;
-  border-radius:8px;
-  margin-top:5px;
+th,td{
+  padding:8px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+.action-btn{
+  padding:5px 8px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin-right:5px;
+}
+
+.edit{background:#ffc107;}
+.delete{background:#ff4d4d;color:white;}
+.print{background:#17a2b8;color:white;}
+
+/* SUBMIT */
+button.submit-btn{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,#00d4d4,#00a3a3);
+  font-weight:700;
+  cursor:pointer;
 }
 
 /* POPUP */
@@ -122,6 +205,13 @@ textarea{height:70px;}
   border-radius:8px;
   display:none;
 }
+
+/* ERROR */
+#error{
+  color:#ffb3b3;
+  font-size:12px;
+  margin-top:5px;
+}
 </style>
 </head>
 
@@ -129,12 +219,24 @@ textarea{height:70px;}
 
 <!-- LOGIN -->
 <div id="loginPage">
-  <div class="login-card">
-    <h2>Employee Onboarding System</h2>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <div id="error" style="color:#ffb3b3;font-size:12px;"></div>
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <h2>Employee Onboarding System</h2>
+      <p>Secure HR Access Portal</p>
+
+      <input id="username" placeholder="Username">
+      <input id="password" type="password" placeholder="Password">
+
+      <button onclick="login()">Login</button>
+
+      <div class="small">
+        Onboarding • Transfers • Offboarding
+      </div>
+
+      <div id="error"></div>
+
+    </div>
   </div>
 </div>
 
@@ -143,10 +245,19 @@ textarea{height:70px;}
 
 <header>
   <div>Employee Onboarding System</div>
-  <button onclick="logout()">Logout</button>
+  <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
+
+<!-- SEARCH -->
+<div class="card">
+  <h3>Search Records</h3>
+  <div class="search-box">
+    <input id="search" placeholder="Search name / dept / type">
+    <button onclick="render()">Search</button>
+  </div>
+</div>
 
 <!-- TABS -->
 <div class="card">
@@ -155,145 +266,49 @@ textarea{height:70px;}
   <div class="tab" onclick="show('transfer',this)">Transfer</div>
 </div>
 
-<!-- ================= ONBOARD ================= -->
+<!-- FORMS -->
 <div id="onboard" class="card">
 <h3>Onboarding</h3>
-
-<label>Full Name</label>
-<input id="n_name">
-
-<label>Department</label>
-<input id="n_dept">
-
-<label>Job Title</label>
-<input id="n_job">
-
-<label>Start Date</label>
+<input id="n_name" placeholder="Full Name">
+<input id="n_dept" placeholder="Department">
+<input id="n_job" placeholder="Job Title">
 <input id="n_start" type="date">
-
-<!-- EMAIL -->
-<label>Email Required?</label>
-<select id="n_email" onchange="toggleEmail()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="emailBox" class="box" style="display:none;">
-  <div class="helper">✉ Which email should IT create?</div>
-  <input id="n_email_address" placeholder="john.smith@company.com">
+<textarea id="n_notes" placeholder="Notes"></textarea>
+<button class="submit-btn" onclick="save('Onboarding')">Submit</button>
 </div>
 
-<!-- NETWORK SHARE FIXED -->
-<label>Network Share Folder Required?</label>
-<select id="n_share" onchange="toggleShare()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="shareBox" class="box" style="display:none;">
-
-  <div class="helper">📁 Network Share Folder Access Request</div>
-
-  <label>Folder Path to Create / Access</label>
-  <input id="n_share_folder" placeholder="/Departments/HR/JohnSmith">
-
-  <label>Access Type</label>
-  <select id="n_share_access">
-    <option>Read Only</option>
-    <option>Read / Write</option>
-    <option>Full Control</option>
-  </select>
-
-</div>
-
-<!-- APPS -->
-<label>Additional Applications Required?</label>
-<select id="n_apps" onchange="toggleApps()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="appsBox" class="box" style="display:none;">
-  <div class="helper">🧩 Applications Required</div>
-  <textarea id="n_app_list" placeholder="SAP, VPN, Outlook..."></textarea>
-
-  <div class="helper">📌 Reason</div>
-  <textarea id="n_app_reason"></textarea>
-</div>
-
-<label>Notes</label>
-<textarea id="n_notes"></textarea>
-
-<button onclick="save()">Submit</button>
-</div>
-
-<!-- ================= OFFBOARD ================= -->
 <div id="offboard" class="card hidden">
 <h3>Offboarding</h3>
-
 <input id="o_name" placeholder="Name">
 <input id="o_dept" placeholder="Department">
-<input id="o_lastday" type="date">
-
-<select id="o_reason">
-  <option>Resignation</option>
-  <option>Termination</option>
-  <option>Contract End</option>
-</select>
-
+<input id="o_last" type="date">
 <textarea id="o_notes"></textarea>
-
-<button onclick="save()">Submit</button>
+<button class="submit-btn" onclick="save('Offboarding')">Submit</button>
 </div>
 
-<!-- ================= TRANSFER ================= -->
 <div id="transfer" class="card hidden">
 <h3>Transfer</h3>
-
-<label>Full Name</label>
-<input id="t_name">
-
-<label>From Department</label>
-<input id="t_from">
-
-<label>To Department</label>
-<input id="t_to">
-
-<label>Email Required?</label>
-<select id="t_email" onchange="toggleTEmail()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="tEmailBox" class="box" style="display:none;">
-  <div class="helper">✉ Which email should IT create?</div>
-  <input id="t_email_address">
-</div>
-
-<label>Network Share Folder Required?</label>
-<select id="t_share" onchange="toggleTShare()">
-  <option>No</option>
-  <option>Yes</option>
-</select>
-
-<div id="tShareBox" class="box" style="display:none;">
-  <div class="helper">📁 Network Share Folder Access Request</div>
-
-  <label>Folder Path to Create / Access</label>
-  <input id="t_share_folder">
-
-  <label>Access Type</label>
-  <select id="t_share_access">
-    <option>Read Only</option>
-    <option>Read / Write</option>
-    <option>Full Control</option>
-  </select>
-</div>
-
-<label>Notes</label>
+<input id="t_name" placeholder="Name">
+<input id="t_from" placeholder="From Dept">
+<input id="t_to" placeholder="To Dept">
 <textarea id="t_notes"></textarea>
+<button class="submit-btn" onclick="save('Transfer')">Submit</button>
+</div>
 
-<button onclick="save()">Submit</button>
+<!-- TABLE -->
+<div class="card">
+<h3>Records</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Dept</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
 </div>
 
 </div>
@@ -302,43 +317,92 @@ textarea{height:70px;}
 <div id="popup">Saved ✔</div>
 
 <script>
-const users={hr:"hr123",it:"it123"};
+const users = { hr:"hr123", it:"it123" };
+
+let data = JSON.parse(localStorage.getItem("emp") || "[]");
 
 /* LOGIN */
 function login(){
-  if(users[username.value]===password.value){
-    localStorage.setItem("hr","1");
-    loginPage.style.display="none";
+  const u = username.value;
+  const p = password.value;
+
+  if(users[u] === p){
+    loginPage.style.display = "none";
     system.classList.remove("hidden");
-  }else{
-    error.innerText="Wrong credentials";
+    render();
+    error.innerText = "";
+  } else {
+    error.innerText = "❌ Wrong username or password";
   }
 }
 
-/* SESSION */
-window.onload=()=>{
-  if(localStorage.getItem("hr")==="1"){
-    loginPage.style.display="none";
-    system.classList.remove("hidden");
-  }
-};
+/* ENTER KEY LOGIN FIX */
+document.addEventListener("keydown", function(e){
+  const loginVisible = !document.getElementById("system").classList.contains("hidden");
 
-/* ENTER */
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    if(system.classList.contains("hidden")) login();
+  if(e.key === "Enter" && loginVisible === false){
+    login();
   }
 });
 
 /* LOGOUT */
 function logout(){
-  localStorage.removeItem("hr");
   location.reload();
+}
+
+/* SAVE */
+function save(type){
+  let obj = {
+    id: Date.now(),
+    name: n_name.value || o_name.value || t_name.value,
+    dept: n_dept.value || o_dept.value || t_from.value,
+    type: type
+  };
+
+  data.push(obj);
+  localStorage.setItem("emp", JSON.stringify(data));
+  popup();
+  render();
+}
+
+/* RENDER */
+function render(){
+  let q = search.value?.toLowerCase() || "";
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data
+  .filter(r =>
+    r.name.toLowerCase().includes(q) ||
+    r.dept.toLowerCase().includes(q) ||
+    r.type.toLowerCase().includes(q)
+  )
+  .forEach(r => {
+    list.innerHTML += `
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.type}</td>
+        <td>${r.dept}</td>
+        <td>
+          <button class="action-btn edit">Edit</button>
+          <button class="action-btn delete" onclick="del(${r.id})">Del</button>
+          <button class="action-btn print" onclick="window.print()">Print</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* DELETE */
+function del(id){
+  data = data.filter(r => r.id !== id);
+  localStorage.setItem("emp", JSON.stringify(data));
+  render();
 }
 
 /* TAB */
 function show(id,el){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
 
   onboard.classList.add("hidden");
@@ -348,32 +412,10 @@ function show(id,el){
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* TOGGLES */
-function toggleEmail(){
-  emailBox.style.display=n_email.value==="Yes"?"block":"none";
-}
-function toggleShare(){
-  shareBox.style.display=n_share.value==="Yes"?"block":"none";
-}
-function toggleApps(){
-  appsBox.style.display=n_apps.value==="Yes"?"block":"none";
-}
-function toggleTEmail(){
-  tEmailBox.style.display=t_email.value==="Yes"?"block":"none";
-}
-function toggleTShare(){
-  tShareBox.style.display=t_share.value==="Yes"?"block":"none";
-}
-
-/* SAVE */
-function save(){
-  popup();
-}
-
 /* POPUP */
 function popup(){
-  let p=document.getElementById("popup");
-  p.style.display="block";
+  let p = document.getElementById("popup");
+  p.style.display = "block";
   setTimeout(()=>p.style.display="none",2000);
 }
 </script>
