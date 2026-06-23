@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Onboarding System</title>
+<title>HR Onboarding System</title>
 
 <style>
 body{
@@ -11,6 +11,8 @@ body{
   font-family:Arial;
   background:#f4f7fa;
 }
+
+.hidden{display:none;}
 
 /* LOGIN */
 #loginPage{
@@ -47,8 +49,6 @@ body{
 }
 
 /* SYSTEM */
-.hidden{display:none;}
-
 header{
   background:#007a7a;
   color:white;
@@ -99,6 +99,11 @@ button{
   border-radius:6px;
 }
 
+label{
+  font-size:13px;
+  font-weight:bold;
+}
+
 #popup{
   position:fixed;
   top:20px;
@@ -117,7 +122,7 @@ button{
 <!-- LOGIN -->
 <div id="loginPage">
   <div class="login-card">
-    <h2>Onboarding System</h2>
+    <h2>HR System Login</h2>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
@@ -129,12 +134,13 @@ button{
 <div id="system" class="hidden">
 
 <header>
-  <div>Onboarding System</div>
+  <div>HR Onboarding System</div>
   <button onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
+<!-- TABS -->
 <div class="card">
   <div class="tab active" onclick="show('onboard',this)">Onboarding</div>
   <div class="tab" onclick="show('offboard',this)">Offboarding</div>
@@ -144,54 +150,161 @@ button{
 
 <!-- ONBOARD -->
 <div id="onboard" class="card">
-<h3>Onboarding</h3>
+<h3>Employee Onboarding</h3>
 
-<input id="n_name" placeholder="Full Name">
-<input id="n_dept" placeholder="Department">
-<input id="n_job" placeholder="Job Title">
+<label>Full Name</label>
+<input id="n_name">
 
-<select id="n_email"><option>YES</option><option>NO</option></select>
-<select id="n_fin"><option>YES</option><option>NO</option></select>
+<label>Department</label>
+<input id="n_dept">
 
-<textarea id="n_notes" placeholder="Notes"></textarea>
+<label>Job Title</label>
+<input id="n_job">
 
-<button onclick="save('onboard')">Submit</button>
+<label>Employment Type</label>
+<select id="n_type">
+  <option>Full-Time</option>
+  <option>Part-Time</option>
+  <option>Contract</option>
+  <option>Intern</option>
+</select>
+
+<label>Start Date</label>
+<input id="n_start" type="date">
+
+<!-- EMAIL -->
+<label>Company Email Required?</label>
+<select id="n_email" onchange="toggleEmailBox()">
+  <option value="No">No</option>
+  <option value="Yes">Yes</option>
+</select>
+
+<div id="emailBox" style="display:none;">
+  <label>Email Address to Create</label>
+  <input id="n_email_address" placeholder="e.g. john.smith@company.com">
+</div>
+
+<!-- FINPOWER -->
+<label>System Access (Finpower)</label>
+<select id="n_finpower">
+  <option>No</option>
+  <option>Yes</option>
+</select>
+
+<!-- APPS -->
+<label>Additional Software Apps Needed?</label>
+<select id="n_apps" onchange="toggleAppsBox()">
+  <option value="No">No</option>
+  <option value="Yes">Yes</option>
+</select>
+
+<div id="appsBox" style="display:none;">
+  <label>Required Applications</label>
+  <textarea id="n_app_list"></textarea>
+
+  <label>Reason for Software Access</label>
+  <textarea id="n_app_reason"></textarea>
+
+  <label>Email Justification (IT Approval Reason)</label>
+  <textarea id="n_app_email_reason"></textarea>
+</div>
+
+<label>System Access Details</label>
+<textarea id="n_access"></textarea>
+
+<label>Notes</label>
+<textarea id="n_notes"></textarea>
+
+<button onclick="save('onboard')">Submit Onboarding</button>
 </div>
 
 <!-- OFFBOARD -->
 <div id="offboard" class="card hidden">
-<h3>Offboarding</h3>
+<h3>Employee Offboarding</h3>
 
-<input id="o_name" placeholder="Full Name">
-<input id="o_dept" placeholder="Department">
+<label>Full Name</label>
+<input id="o_name">
 
-<select id="o_email"><option>Disable</option><option>Keep</option></select>
-<select id="o_fin"><option>Revoke</option><option>Keep</option></select>
+<label>Department</label>
+<input id="o_dept">
 
+<label>Last Working Day</label>
+<input id="o_lastday" type="date">
+
+<label>Reason</label>
+<select id="o_reason">
+  <option>Resignation</option>
+  <option>Termination</option>
+  <option>Contract End</option>
+  <option>Retirement</option>
+</select>
+
+<label>Email Handling</label>
+<select id="o_email">
+  <option>Disable Immediately</option>
+  <option>Keep Temporary</option>
+</select>
+
+<label>System Access</label>
+<select id="o_access">
+  <option>Revoke All</option>
+  <option>Partial Access</option>
+</select>
+
+<label>Asset Return</label>
+<select id="o_assets">
+  <option>Required</option>
+  <option>Not Required</option>
+</select>
+
+<label>Notes</label>
 <textarea id="o_notes"></textarea>
 
-<button onclick="save('offboard')">Submit</button>
+<button onclick="save('offboard')">Submit Offboarding</button>
 </div>
 
 <!-- TRANSFER -->
 <div id="transfer" class="card hidden">
-<h3>Transfer</h3>
+<h3>Employee Transfer</h3>
 
-<input id="t_name" placeholder="Full Name">
-<input id="t_from" placeholder="From Department">
-<input id="t_to" placeholder="To Department">
+<label>Full Name</label>
+<input id="t_name">
 
+<label>Current Department</label>
+<input id="t_from">
+
+<label>New Department</label>
+<input id="t_to">
+
+<label>New Job Title</label>
+<input id="t_title">
+
+<label>Effective Date</label>
+<input id="t_date" type="date">
+
+<label>Reason</label>
+<select id="t_reason">
+  <option>Promotion</option>
+  <option>Restructure</option>
+  <option>Employee Request</option>
+  <option>Management Decision</option>
+</select>
+
+<label>System Access Update</label>
+<textarea id="t_access"></textarea>
+
+<label>Notes</label>
 <textarea id="t_notes"></textarea>
 
-<button onclick="save('transfer')">Submit</button>
+<button onclick="save('transfer')">Submit Transfer</button>
 </div>
 
 <!-- SEARCH -->
 <div id="search" class="card hidden">
-<h3>Search</h3>
-<input id="searchInput" placeholder="Search name">
+<h3>Search Records</h3>
+<input id="searchInput">
 <button onclick="searchData()">Search</button>
-<div id="searchResult"></div>
+<pre id="searchResult"></pre>
 </div>
 
 </div>
@@ -205,14 +318,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getFirestore, collection, addDoc, getDocs } 
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-/* 🔥 YOUR FIREBASE CONFIG (FIXED) */
 const firebaseConfig = {
-  apiKey: "AIzaSyByT1DwJUtyzmIpxozlQWpwZhh1xIwH3-s",
-  authDomain: "employee-onboarding-syst-16409.firebaseapp.com",
-  projectId: "employee-onboarding-syst-16409",
-  storageBucket: "employee-onboarding-syst-16409.appspot.com",
-  messagingSenderId: "474892745379",
-  appId: "1:474892745379:web:30b85e2da74ccd30eddd16"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_BUCKET",
+  messagingSenderId: "YOUR_SENDER",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -244,12 +356,9 @@ function login(){
   }
 }
 
-/* ENTER LOGIN */
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter" && loginPage.style.display !== "none"){
-    login();
-  }
-});
+function logout(){
+  location.reload();
+}
 
 /* TAB */
 function show(id,el){
@@ -264,6 +373,17 @@ function show(id,el){
   document.getElementById(id).classList.remove("hidden");
 }
 
+/* TOGGLES */
+function toggleEmailBox(){
+  document.getElementById("emailBox").style.display =
+    n_email.value === "Yes" ? "block" : "none";
+}
+
+function toggleAppsBox(){
+  document.getElementById("appsBox").style.display =
+    n_apps.value === "Yes" ? "block" : "none";
+}
+
 /* SAVE */
 async function save(type){
 
@@ -273,16 +393,35 @@ async function save(type){
     obj.name=n_name.value;
     obj.dept=n_dept.value;
     obj.job=n_job.value;
-    obj.email=n_email.value;
-    obj.fin=n_fin.value;
+    obj.type=n_type.value;
+    obj.start=n_start.value;
+
+    obj.emailRequired=n_email.value;
+    if(n_email.value==="Yes"){
+      obj.emailAddress=n_email_address.value;
+    }
+
+    obj.finpowerAccess=n_finpower.value;
+
+    obj.additionalApps=n_apps.value;
+    if(n_apps.value==="Yes"){
+      obj.appList=n_app_list.value;
+      obj.appReason=n_app_reason.value;
+      obj.appEmailJustification=n_app_email_reason.value;
+    }
+
+    obj.systemAccess=n_access.value;
     obj.notes=n_notes.value;
   }
 
   if(type==="offboard"){
     obj.name=o_name.value;
     obj.dept=o_dept.value;
+    obj.lastDay=o_lastday.value;
+    obj.reason=o_reason.value;
     obj.email=o_email.value;
-    obj.fin=o_fin.value;
+    obj.access=o_access.value;
+    obj.assets=o_assets.value;
     obj.notes=o_notes.value;
   }
 
@@ -290,6 +429,10 @@ async function save(type){
     obj.name=t_name.value;
     obj.from=t_from.value;
     obj.to=t_to.value;
+    obj.title=t_title.value;
+    obj.date=t_date.value;
+    obj.reason=t_reason.value;
+    obj.access=t_access.value;
     obj.notes=t_notes.value;
   }
 
@@ -332,10 +475,6 @@ function popup(){
   setTimeout(()=>p.style.display="none",2000);
 }
 
-/* LOGOUT */
-function logout(){
-  location.reload();
-}
 </script>
 
 </body>
