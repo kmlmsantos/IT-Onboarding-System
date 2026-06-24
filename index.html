@@ -1074,11 +1074,29 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
-<script>
-const users = { hr:"hr123", it:"it123" };
+<script type="module">
+  // 1. Import the official Firebase SDK modules from the CDN link
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-localStorage.removeItem("emp");
-let data = [];
+  // 2. Paste your copied configuration values right here
+  const firebaseConfig = {
+    apiKey: "YOUR_ACTUAL_API_KEY",
+    authDomain: "YOUR_ACTUAL_AUTH_DOMAIN",
+    projectId: "YOUR_ACTUAL_PROJECT_ID",
+    storageBucket: "YOUR_ACTUAL_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_ACTUAL_SENDER_ID",
+    appId: "YOUR_ACTUAL_APP_ID"
+  };
+
+  // 3. Initialize your cloud database instance
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 4. This is where your original code variables continue...
+  const users = { hr:"hr123", it:"it123" };
+  localStorage.removeItem("emp");
+  let data = [];
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
 let currentItActiveViewTab = "helpdesk"; 
