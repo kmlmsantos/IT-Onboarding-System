@@ -316,6 +316,7 @@ header {
   background: #f1f5f9;
   height: 16px;
   border-radius: 4px;
+  margin-row: 10px;
   position: relative;
   overflow: hidden;
   margin: 0 10px;
@@ -580,6 +581,7 @@ tr:hover td { background: #f8fafc; }
 
 .edit { background: #ffc107; color: #212529; }
 .delete { background: #ff4d4d; color: white; }
+.print { background: #17a2b8; color: white; }
 .save-status-btn { background: #28a745; color: white; font-weight: bold; margin-top: 15px; padding: 10px 20px; }
 
 .action-btn:disabled {
@@ -587,16 +589,6 @@ tr:hover td { background: #f8fafc; }
   color: #94a3b8 !important;
   cursor: not-allowed !important;
   opacity: 0.6;
-}
-
-.clear-chart-filters-btn {
-  background: #e2e8f0;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 10px;
-  cursor: pointer;
-  margin-left: 10px;
 }
 
 /* PRIORITY & STATE BADGES */
@@ -652,222 +644,19 @@ button.submit-btn {
   display: none;
 }
 </style>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    deleteDoc, 
-    updateDoc,
-    doc, 
-    onSnapshot,
-    query,
-    orderBy 
-  } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB8W5E7zM-ig0leEVWLXYNNamJjZLQV5Ro",
-    authDomain: "enterprise-service-management.firebaseapp.com",
-    projectId: "enterprise-service-management",
-    storageBucket: "enterprise-service-management.firebasestorage.app",
-    messagingSenderId: "769928761949",
-    appId: "1:769928761949:web:a737d929b5454a5a7573b4",
-    measurementId: "G-PQXS40JP45"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // Global variables
-  window.editId = null;
-  window.globalCloudData = [];
-  window.selectedInspectionId = null;
-
-  // UI Setup & Stubs to prevent execution errors
-  window.showToast = function() {
-    const pop = document.getElementById("popup");
-    if (pop) {
-      pop.style.display = "block";
-      setTimeout(() => pop.style.display = "none", 3000);
-    }
-  };
-
-  window.resetFormInputs = function() {
-    const inputs = document.querySelectorAll("#system input, #system textarea");
-    inputs.forEach(i => i.value = "");
-  };
-
-  window.switchLoginView = function(view) {
-    if (view === 'onboarding') {
-      document.getElementById("authPortalContainer").classList.remove("hidden");
-      document.getElementById("helpdeskPortalContainer").classList.add("hidden");
-      document.getElementById("navBtnOnboarding").classList.add("active");
-      document.getElementById("navBtnTicketing").classList.remove("active");
-    } else {
-      document.getElementById("authPortalContainer").classList.add("hidden");
-      document.getElementById("helpdeskPortalContainer").classList.remove("hidden");
-      document.getElementById("navBtnOnboarding").classList.remove("active");
-      document.getElementById("navBtnTicketing").classList.add("active");
-    }
-  };
-
-  window.handleLoginKeyPress = function(e) { if(e.key === 'Enter') login(); };
-  window.handleTicketKeyPress = function(e) { if(e.key === 'Enter') submitHelpdeskTicket(e); };
-  window.handleLoginIssueChange = function(val) {
-    const el = document.getElementById("t_client_other_box");
-    if(val === 'Other') el.classList.remove("hidden");
-    else el.classList.add("hidden");
-  };
-
-  window.login = function() {
-    const user = document.getElementById("username").value.toLowerCase();
-    if (user === 'hr' || user === 'it') {
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("system").classList.remove("hidden");
-      document.getElementById("userRoleDisplay").innerText = user;
-    } else {
-      const err = document.getElementById("error");
-      err.style.display = "block";
-      err.innerText = "Invalid credentials. Use hr/hr123 or it/it123";
-    }
-  };
-
-  window.logout = function() {
-    document.getElementById("loginPage").classList.remove("hidden");
-    document.getElementById("system").classList.add("hidden");
-  };
-
-  window.toggleConditionalField = function(id, val) {
-    const el = document.getElementById(id);
-    if(val === 'Yes') el.classList.remove("hidden");
-    else el.classList.add("hidden");
-  };
-
-  window.showFormTab = function(tabId, btn) {
-    document.getElementById("onboard").classList.add("hidden");
-    document.getElementById("offboard").classList.add("hidden");
-    document.getElementById(tabId).classList.remove("hidden");
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    btn.classList.add("active");
-  };
-
-  window.render = function() {
-    console.log("Data changed, rendering views with data count: ", window.globalCloudData.length);
-  };
-
-  // Interface Data Handlers
-  window.saveDataPayload = async function(type, event) {
-    if (event) event.preventDefault(); // CRITICAL: Stop immediate window reload loops
-    
-    let payload = { type: type, status: "Pending", timestamp: Date.now() };
-
-    if (type === "Onboarding") {
-      payload.name = document.getElementById("n_name").value;
-      payload.dept = document.getElementById("n_dept_select").value;
-      payload.jobTitle = document.getElementById("n_job").value;
-      payload.startDate = document.getElementById("n_start").value;
-      payload.emailToggle = document.getElementById("n_email_toggle").value;
-      payload.emailVal = document.getElementById("n_email_val").value;
-      payload.finpower = document.getElementById("n_finpower").value;
-      payload.folderToggle = document.getElementById("n_folder_toggle").value;
-      payload.folderVal = document.getElementById("n_folder_val").value;
-      payload.softwareToggle = document.getElementById("n_software_toggle").value;
-      payload.softwareName = document.getElementById("n_software_name").value;
-      payload.softwareReason = document.getElementById("n_software_reason").value;
-      payload.notes = document.getElementById("n_notes").value;
-    } else if (type === "Offboarding") {
-      payload.name = document.getElementById("o_name").value;
-      payload.dept = document.getElementById("o_dept_select").value;
-      payload.notes = document.getElementById("o_notes").value;
-    }
-
-    if (!payload.name) return alert("Please fill out a valid target identifier name.");
-
-    try {
-      if (window.editId) {
-        await updateDoc(doc(db, "operations_records", window.editId), payload);
-        window.editId = null;
-        document.getElementById("btn-onboard").innerText = "Submit";
-      } else {
-        await addDoc(collection(db, "operations_records"), payload);
-      }
-      showToast();
-      resetFormInputs();
-      alert("Success! Record synchronized with Firestore database.");
-    } catch (e) {
-      console.error("Database save failed: ", e);
-      alert("Error saving record: " + e.message);
-    }
-  };
-
-  window.submitHelpdeskTicket = async function(event) {
-    if (event) event.preventDefault(); // CRITICAL: Prevent page reload
-
-    let category = document.getElementById("t_client_issue").value;
-    if (category === "Other") category = document.getElementById("t_client_other_val").value;
-
-    let ticket = {
-      type: "IT Ticket",
-      name: document.getElementById("t_client_name").value,
-      email: document.getElementById("t_client_email").value,
-      dept: document.getElementById("t_client_dept").value,
-      category: category,
-      priority: document.getElementById("t_client_priority").value,
-      notes: document.getElementById("t_client_notes").value,
-      status: "Pending",
-      timestamp: Date.now()
-    };
-
-    if (!ticket.name) return alert("Provide your complete name authorization details.");
-
-    try {
-      await addDoc(collection(db, "operations_records"), ticket);
-      alert("Technical support incident uploaded instantly to Database.");
-      document.getElementById("t_client_name").value = "";
-      document.getElementById("t_client_notes").value = "";
-    } catch(e) {
-      console.error("Ticket upload failed: ", e);
-    }
-  };
-
-  window.deleteRecord = async function(docId) {
-    if (confirm("Permanently purge this operational logging line item?")) {
-      await deleteDoc(doc(db, "operations_records", docId));
-    }
-  };
-
-  window.cloudUpdateStatus = async function(docId, newStatus) {
-    await updateDoc(doc(db, "operations_records", docId), { status: newStatus });
-    showToast();
-  };
-
-  // Live Cloud Subscription Listening Hook
-  const q = query(collection(db, "operations_records"), orderBy("timestamp", "desc"));
-  onSnapshot(q, (snapshot) => {
-    window.globalCloudData = [];
-    snapshot.forEach((doc) => {
-      let docData = doc.data();
-      docData.docId = doc.id;
-      window.globalCloudData.push(docData);
-    });
-    render();
-  });
-</script>
 </head>
 
 <body>
 
-<div id="popup">Action completed successfully!</div>
-
 <div id="loginPage">
   <div class="login-wrap">
+    
     <div class="portal-toggle-buttons">
       <button id="navBtnOnboarding" class="portal-nav-btn active" onclick="switchLoginView('onboarding')">Employee Onboarding</button>
       <button id="navBtnTicketing" class="portal-nav-btn" onclick="switchLoginView('ticketing')">IT Helpdesk Ticket</button>
     </div>
 
+    <!-- ONBOARDING LOGIN FORM (With dynamic Enter submission) -->
     <div id="authPortalContainer" class="login-card" onkeydown="handleLoginKeyPress(event)">
       <h2>Employee Onboarding System</h2>
       <p>HR Authorized Access Only (hr / hr123 or it / it123)</p>
@@ -878,6 +667,7 @@ button.submit-btn {
       <div class="small">Onboarding • Transfers • Offboarding</div>
     </div>
 
+    <!-- TICKET SUBMISSION FORM (With dynamic Enter submission) -->
     <div id="helpdeskPortalContainer" class="login-card hidden" onkeydown="handleTicketKeyPress(event)">
       <h2>IT Helpdesk Service Desk</h2>
       <p>Submit an operational support request instantly</p>
@@ -912,7 +702,7 @@ button.submit-btn {
 
       <div id="t_client_other_box" class="login-conditional-box hidden">
         <label style="color: white; margin-top: 0;">Specify Custom Category Type</label>
-        <input id="t_client_other_val" placeholder="Type category type here...">
+        <input id="t_client_other_val" placeholder="Type category type here..." style="background: rgba(255,255,255,0.25); color: #fff;">
       </div>
 
       <label style="color: white; text-align: left; margin-top: 8px;">Priority Urgency Level</label>
@@ -924,9 +714,10 @@ button.submit-btn {
 
       <textarea id="t_client_notes" placeholder="Describe the problem you are experiencing..." style="height: 80px;"></textarea>
 
-      <button onclick="submitHelpdeskTicket(event)">Submit Support Ticket</button>
+      <button onclick="submitHelpdeskTicket()">Submit Support Ticket</button>
       <div class="small">No administrative account verification required</div>
     </div>
+
   </div>
 </div>
 
@@ -938,11 +729,99 @@ button.submit-btn {
 
 <div class="container">
 
+<div id="reportingDashboard" class="card hidden">
+  <h3>Operational Analytics Overview <span style="font-size: 12px; font-weight: normal; color: #64748b; margin-left: 10px;">(Isolated by Role Privilege)</span></h3>
+  <div class="dashboard-grid">
+    <div id="card-filter-all" class="dash-metrics-card total" onclick="filterDashboardStatus('')">
+      <span class="dash-metrics-title">Total Requests</span>
+      <span id="metric-total" class="dash-metrics-val">0</span>
+      <span class="dash-metrics-sub">All logged events</span>
+    </div>
+    <div id="card-filter-pending" class="dash-metrics-card pending" onclick="filterDashboardStatus('Pending')">
+      <span class="dash-metrics-title">Pending</span>
+      <span id="metric-pending" class="dash-metrics-val">0</span>
+      <span id="pct-pending" class="dash-metrics-sub">0% of total</span>
+    </div>
+    <div id="card-filter-progress" class="dash-metrics-card progress" onclick="filterDashboardStatus('In Progress')">
+      <span class="dash-metrics-title">In Progress</span>
+      <span id="metric-progress" class="dash-metrics-val">0</span>
+      <span id="pct-progress" class="dash-metrics-sub">0% of total</span>
+    </div>
+    <div id="card-filter-completed" class="dash-metrics-card completed" onclick="filterDashboardStatus('Completed')">
+      <span class="dash-metrics-title">Completed</span>
+      <span id="metric-completed" class="dash-metrics-val">0</span>
+      <span id="pct-completed" class="dash-metrics-sub">0% of total</span>
+    </div>
+  </div>
+
+  <div id="itTypeBreakdown" class="hidden" style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #e2e8f0;">
+    <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; color: #475569; margin-bottom: 10px; letter-spacing: 0.5px;">
+      Workflow Type Distribution (IT view)
+      <button id="clearChartFiltersBtn" class="clear-chart-filters-btn hidden" onclick="resetAllChartFilters()">Reset Chart Filters</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+      <div id="type-filter-onboard" class="interactive-type-card" onclick="filterDashboardType('Onboarding')" style="background: #f0fdfa; border: 1px solid #ccfbf1; padding: 12px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #0d9488; font-weight: 700; text-transform: uppercase;">Onboarding Tasks</div>
+        <div id="type-count-onboard" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
+      </div>
+      <div id="type-filter-offboard" class="interactive-type-card" onclick="filterDashboardType('Offboarding')" style="background: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #dc2626; font-weight: 700; text-transform: uppercase;">Offboarding Tasks</div>
+        <div id="type-count-offboard" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
+      </div>
+      <div id="type-filter-transfer" class="interactive-type-card" onclick="filterDashboardType('Transfer')" style="background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #d97706; font-weight: 700; text-transform: uppercase;">Transfer Tasks</div>
+        <div id="type-count-transfer" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
+      </div>
+      <div id="type-filter-tickets" class="interactive-type-card" onclick="filterDashboardType('IT Ticket')" style="background: #eff6ff; border: 1px solid #dbeafe; padding: 12px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #1d4ed8; font-weight: 700; text-transform: uppercase;">Helpdesk Tickets</div>
+        <div id="type-count-tickets" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
+      </div>
+    </div>
+
+    <!-- LIVE DEMAND METRICS GRAPH CONTAINER -->
+    <div class="chart-layout-wrapper">
+      <div class="visual-chart-box">
+        <div class="visual-chart-title">Helpdesk Trends: Volume By Department</div>
+        <div id="deptChartContainer"><!-- Dynamic Bar Content --></div>
+      </div>
+      <div class="visual-chart-box">
+        <div class="visual-chart-title">Helpdesk Trends: Volume By Issue Type</div>
+        <div id="issueChartContainer"><!-- Dynamic Bar Content --></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="globalInspectionCard" class="card hidden">
+  <button class="back-btn" onclick="closeDetailsPanel()">← Back to Records Table</button>
+  
+  <div class="inspection-container">
+    <div class="inspection-header">
+      <h4 style="font-weight: 700;">Record Inspection Details</h4>
+      <span id="it-tag-type" class="inspection-type-tag">Onboarding</span>
+    </div>
+    <div id="itInspectionGrid" class="inspection-grid"></div>
+  </div>
+
+  <div id="itStatusQuickBox" class="status-edit-box hidden">
+    <div style="font-size: 15px; margin-bottom: 10px; color: #1e293b;">
+      Update Action Deployment Status for: <strong id="it-target-name" style="color: #007a7a;">No Record Selected</strong>
+    </div>
+    <label for="it_status_select">Deployment Stage:</label>
+    <select id="it_status_select" style="max-width: 300px; display: block;">
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+    </select>
+    <button class="action-btn save-status-btn" onclick="saveItStatus()">Update Status</button>
+  </div>
+</div>
+
 <div id="mainDashboardForms">
   <div class="card">
     <h3>Search Enterprise Records</h3>
     <div class="search-box">
-      <input id="search" placeholder="Search records..." oninput="render()">
+      <input id="search" placeholder="Search records..." onkeydown="if(event.key === 'Enter') render()">
       <button onclick="render()">Search</button>
     </div>
   </div>
@@ -950,10 +829,18 @@ button.submit-btn {
   <div class="card hr-only-element">
     <div id="tab-onboard" class="tab active" onclick="showFormTab('onboard',this)">Onboarding</div>
     <div id="tab-offboard" class="tab" onclick="showFormTab('offboard',this)">Offboarding</div>
+    <div id="tab-transfer" class="tab" onclick="showFormTab('transfer',this)">Transfer</div>
   </div>
 
+  <div id="itTabController" class="card hidden">
+    <div id="tab-it-helpdesk" class="tab it-tab-active" onclick="switchItDashboardTab('helpdesk')">📥 IT Helpdesk Incident Pipeline</div>
+    <div id="tab-it-hr" class="tab" onclick="switchItDashboardTab('hr')">📋 HR Operational Provisioning Tasks</div>
+  </div>
+
+  <!-- ONBOARDING FORM -->
   <div id="onboard" class="card hr-only-element">
     <h3 id="form-title-onboard">Onboarding</h3>
+       
     <div class="form-row">
       <div class="form-group">
         <label>Full Name</label>
@@ -967,6 +854,11 @@ button.submit-btn {
           <option value="Collections">Collections</option>
           <option value="Finance">Finance</option>
           <option value="HR">HR</option>
+          <option value="Audit">Audit</option>
+          <option value="Compliance">Compliance</option>
+          <option value="Commercial">Commercial</option>
+          <option value="Risk">Risk</option>
+          <option value="Others">Others</option>
         </select>
       </div>
     </div>
@@ -1033,27 +925,945 @@ button.submit-btn {
 
     <label>Notes (Optional)</label>
     <textarea id="n_notes" placeholder="Notes (Optional)"></textarea>
-    <button id="btn-onboard" class="submit-btn" onclick="saveDataPayload('Onboarding', event)">Submit</button>
+       
+    <div class="status-container">
+      <label>Status</label>
+      <div class="status-view-only">Pending</div>
+    </div>
+       
+    <button id="btn-onboard" class="submit-btn" onclick="saveDataPayload('Onboarding')">Submit</button>
   </div>
 
+  <!-- OFFBOARDING FORM -->
   <div id="offboard" class="card hidden hr-only-element">
     <h3 id="form-title-offboard">Offboarding</h3>
     <label>Employee Name</label>
     <input id="o_name" placeholder="Name">
-    
     <label>Department</label>
     <select id="o_dept_select">
       <option value="Sales">Sales</option>
       <option value="Operations">Operations</option>
+      <option value="Collections">Collections</option>
+      <option value="Finance">Finance</option>
+      <option value="HR">HR</option>
+      <option value="Audit">Audit</option>
+      <option value="Compliance">Compliance</option>
+      <option value="Commercial">Commercial</option>
+      <option value="Risk">Risk</option>
+      <option value="Others">Others</option>
     </select>
-
-    <label>Notes (Optional)</label>
+    <label for="o_last">Last Working Date</label>
+    <input id="o_last" type="date">
+    <label>Exit Notes</label>
     <textarea id="o_notes" placeholder="Notes (Optional)"></textarea>
-    <button id="btn-offboard" class="submit-btn" onclick="saveDataPayload('Offboarding', event)">Submit</button>
+       
+    <div class="status-container">
+      <label>Status</label>
+      <div class="status-view-only">Pending</div>
+    </div>
+       
+    <button id="btn-offboard" class="submit-btn" onclick="saveDataPayload('Offboarding')">Submit</button>
+  </div>
+
+  <!-- TRANSFER FORM -->
+  <div id="transfer" class="card hidden hr-only-element">
+    <h3 id="form-title-transfer">Transfer</h3>
+    <label>Employee Name</label>
+    <input id="t_name" placeholder="Name">
+    <label>Current Origin Department</label>
+    <select id="t_from_select">
+      <option value="Sales">Sales</option>
+      <option value="Operations">Operations</option>
+      <option value="Collections">Collections</option>
+      <option value="Finance">Finance</option>
+      <option value="HR">HR</option>
+      <option value="Audit">Audit</option>
+      <option value="Compliance">Compliance</option>
+      <option value="Commercial">Commercial</option>
+      <option value="Risk">Risk</option>
+      <option value="Others">Others</option>
+    </select>
+    <label>Target Destination Department</label>
+    <select id="t_to_select">
+      <option value="Sales">Sales</option>
+      <option value="Operations">Operations</option>
+      <option value="Collections">Collections</option>
+      <option value="Finance">Finance</option>
+      <option value="HR">HR</option>
+      <option value="Audit">Audit</option>
+      <option value="Compliance">Compliance</option>
+      <option value="Commercial">Commercial</option>
+      <option value="Risk">Risk</option>
+      <option value="Others">Others</option>
+    </select>
+    <label>Transfer Justification Details</label>
+    <textarea id="t_notes" placeholder="Notes (Optional)"></textarea>
+       
+    <div class="status-container">
+      <label>Status</label>
+      <div class="status-view-only">Pending</div>
+    </div>
+       
+    <button id="btn-transfer" class="submit-btn" onclick="saveDataPayload('Transfer')">Submit</button>
   </div>
 </div>
+
+<!-- HR RECORDS VIEW CONTAINER -->
+<div id="standardDashboardTableContainer" class="card">
+<h3>Records Administration Output Table</h3>
+<p style="color:#64748b; font-size:12px; margin-top:-10px;">💡 Tip: Click on a record's <strong>Name</strong> to inspect configurations.</p>
+<div style="overflow-x:auto;">
+  <table>
+  <thead>
+  <tr>
+  <th>Target Name</th>
+  <th>Type Group</th>
+  <th>Dept / Category</th>
+  <th>Tracking Detail</th>
+  <th>Status State</th>
+  <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody id="list"></tbody>
+  </table>
 </div>
 </div>
 
+<!-- IT HELPDESK VIEW CONTAINER -->
+<div id="itHelpdeskIsolatedContainer" class="card hidden">
+  <h3 style="color:#1d4ed8; border-bottom: 2px solid #dbeafe;">📥 IT Helpdesk Incoming Ticket Management</h3>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr style="background: #eff6ff;">
+          <th>Submitter Name</th>
+          <th>Department</th>
+          <th>Incident Category</th>
+          <th>Priority Level</th>
+          <th>Status</th>
+          <th>Actions Matrix</th>
+        </tr>
+      </thead>
+      <tbody id="itHelpdeskTicketList"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- IT HR INTERFACING TASKS CONTAINER -->
+<div id="itHrIsolatedContainer" class="card hidden">
+  <h3 style="color:#0f766e; border-bottom: 2px solid #ccfbf1;">📋 HR System Interfacing Tasks</h3>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr style="background: #f0fdfa;">
+          <th>Employee Target</th>
+          <th>Task Operation Type</th>
+          <th>Department Track</th>
+          <th>Execution Date Target</th>
+          <th>Status</th>
+          <th>Actions Matrix</th>
+        </tr>
+      </thead>
+      <tbody id="itHrTaskList"></tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div id="popup">Saved ✔</div>
+
+<script>
+const users = { hr:"hr123", it:"it123" };
+
+localStorage.removeItem("emp");
+let data = [];
+
+let currentUser = localStorage.getItem("onboarding_session") || ""; 
+let currentItActiveViewTab = "helpdesk"; 
+let editId = null;
+
+let activeStatusFilter = "";
+let activeTypeFilter = "";
+let activeDeptChartFilter = "";
+let activeIssueChartFilter = "";
+let selectedInspectionId = null;
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (currentUser) {
+    showSystemInterface();
+  }
+});
+
+function switchLoginView(targetPortal) {
+  document.getElementById("navBtnOnboarding").classList.remove("active");
+  document.getElementById("navBtnTicketing").classList.remove("active");
+  
+  // Clear any existing operational errors when flipping panels
+  const errDiv = document.getElementById("error");
+  errDiv.innerText = "";
+  errDiv.style.display = "none";
+  
+  if (targetPortal === 'onboarding') {
+    document.getElementById("navBtnOnboarding").classList.add("active");
+    document.getElementById("authPortalContainer").classList.remove("hidden");
+    document.getElementById("helpdeskPortalContainer").classList.add("hidden");
+  } else {
+    document.getElementById("navBtnTicketing").classList.add("active");
+    document.getElementById("authPortalContainer").classList.add("hidden");
+    document.getElementById("helpdeskPortalContainer").classList.remove("hidden");
+  }
+}
+
+// Watch Enter keys inside the admin auth frame
+function handleLoginKeyPress(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    login();
+  }
+}
+
+// Watch Enter keys inside the client helpdesk ticketing frame
+function handleTicketKeyPress(e) {
+  // Allow textarea breaks, check normal inputs
+  if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    submitHelpdeskTicket();
+  }
+}
+
+function handleLoginIssueChange(val) {
+  const otherBox = document.getElementById("t_client_other_box");
+  if(val === "Other") {
+    otherBox.classList.remove("hidden");
+  } else {
+    otherBox.classList.add("hidden");
+  }
+}
+
+function login(){
+  const u = document.getElementById("username").value.toLowerCase().trim();
+  const p = document.getElementById("password").value;
+  const errDiv = document.getElementById("error");
+
+  if(users[u] === p){
+    currentUser = u;
+    localStorage.setItem("onboarding_session", currentUser);
+    errDiv.innerText = "";
+    errDiv.style.display = "none";
+    showSystemInterface();
+  } else {
+    errDiv.innerText = "❌ Error: Invalid Username or Password Credentials Provided.";
+    errDiv.style.display = "block";
+  }
+}
+
+function logout() {
+  currentUser = "";
+  localStorage.removeItem("onboarding_session");
+  document.getElementById("system").classList.add("hidden");
+  document.getElementById("loginPage").style.display = "flex";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  
+  const errDiv = document.getElementById("error");
+  errDiv.innerText = "";
+  errDiv.style.display = "none";
+}
+
+function toggleConditionalField(targetBoxId, val) {
+  const element = document.getElementById(targetBoxId);
+  if(val === "Yes") {
+    element.classList.remove("hidden");
+  } else {
+    element.classList.add("hidden");
+  }
+}
+
+function submitHelpdeskTicket() {
+  const cName = document.getElementById("t_client_name").value.trim();
+  const cEmail = document.getElementById("t_client_email").value.trim();
+  const cDept = document.getElementById("t_client_dept").value;
+  let cCategory = document.getElementById("t_client_issue").value;
+  const cPriority = document.getElementById("t_client_priority").value;
+  const cNotes = document.getElementById("t_client_notes").value.trim();
+
+  if(!cName || !cEmail || !cNotes) {
+    alert("❌ Error: Please fill in all required fields.");
+    return;
+  }
+
+  if(cCategory === "Other") {
+    const customVal = document.getElementById("t_client_other_val").value.trim();
+    if(!customVal) {
+      alert("❌ Error: Please specify your 'Other' issue type.");
+      return;
+    }
+    cCategory = `Other: ${customVal}`;
+  }
+
+  let ticketPayload = {
+    id: Date.now(),
+    type: "IT Ticket",
+    name: cName,
+    clientDept: cDept, 
+    dept: cCategory, 
+    email: cEmail,
+    priority: cPriority,
+    notes: cNotes,
+    status: "Pending"
+  };
+
+  data.push(ticketPayload);
+  localStorage.setItem("emp", JSON.stringify(data));
+  
+  alert(`✔ Ticket Logged Successfully.`);
+  
+  document.getElementById("t_client_name").value = "";
+  document.getElementById("t_client_email").value = "";
+  document.getElementById("t_client_notes").value = "";
+  document.getElementById("t_client_issue").value = "Hardware";
+  document.getElementById("t_client_other_val").value = "";
+  document.getElementById("t_client_other_box").classList.add("hidden");
+  
+  calculateMetrics();
+  render();
+}
+
+function showSystemInterface() {
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("system").classList.remove("hidden");
+  document.getElementById("userRoleDisplay").innerText = currentUser;
+  
+  setupRolePermissions();
+  calculateMetrics();
+  render();
+}
+
+function setupRolePermissions() {
+  const hrElements = document.querySelectorAll(".hr-only-element");
+  const dashboardElement = document.getElementById("reportingDashboard");
+  const itBreakdownElement = document.getElementById("itTypeBreakdown");
+  const itTabElement = document.getElementById("itTabController");
+  
+  const standardTable = document.getElementById("standardDashboardTableContainer");
+  const itHelpdeskTable = document.getElementById("itHelpdeskIsolatedContainer");
+  const itHrTable = document.getElementById("itHrIsolatedContainer");
+
+  dashboardElement.classList.remove("hidden");
+  resetAllChartFilters();
+
+  if (currentUser === "hr") {
+    hrElements.forEach(el => el.classList.remove("hidden"));
+    itBreakdownElement.classList.add("hidden");
+    itTabElement.classList.add("hidden");
+    
+    standardTable.classList.remove("hidden");
+    itHelpdeskTable.classList.add("hidden");
+    itHrTable.classList.add("hidden");
+    
+    showFormTab('onboard', document.getElementById('tab-onboard'));
+  } else if (currentUser === "it") {
+    hrElements.forEach(el => el.classList.add("hidden"));
+    itBreakdownElement.classList.remove("hidden");
+    itTabElement.classList.remove("hidden");
+    
+    standardTable.classList.add("hidden");
+    switchItDashboardTab(currentItActiveViewTab);
+  }
+}
+
+function showFormTab(tabId, el) {
+  const tabs = document.querySelectorAll(".hr-only-element .tab");
+  tabs.forEach(t => t.classList.remove("active"));
+  if (el) el.classList.add("active");
+
+  document.getElementById("onboard").classList.add("hidden");
+  document.getElementById("offboard").classList.add("hidden");
+  document.getElementById("transfer").classList.add("hidden");
+
+  document.getElementById(tabId).classList.remove("hidden");
+  
+  if (!editId) {
+    resetForms();
+  }
+}
+
+function switchItDashboardTab(tabType) {
+  currentItActiveViewTab = tabType;
+  document.getElementById("tab-it-helpdesk").classList.remove("it-tab-active");
+  document.getElementById("tab-it-hr").classList.remove("it-tab-active");
+  
+  const itHelpdeskTable = document.getElementById("itHelpdeskIsolatedContainer");
+  const itHrTable = document.getElementById("itHrIsolatedContainer");
+
+  if (tabType === 'helpdesk') {
+    document.getElementById("tab-it-helpdesk").classList.add("it-tab-active");
+    itHelpdeskTable.classList.remove("hidden");
+    itHrTable.classList.add("hidden");
+  } else {
+    document.getElementById("tab-it-hr").classList.add("it-tab-active");
+    itHelpdeskTable.classList.add("hidden");
+    itHrTable.classList.remove("hidden");
+  }
+  render();
+}
+
+function filterDashboardStatus(status) {
+  activeStatusFilter = status;
+  
+  document.getElementById("card-filter-all").classList.remove("active-filter");
+  document.getElementById("card-filter-pending").classList.remove("active-filter");
+  document.getElementById("card-filter-progress").classList.remove("active-filter");
+  document.getElementById("card-filter-completed").classList.remove("active-filter");
+
+  if (status === "") document.getElementById("card-filter-all").classList.add("active-filter");
+  else if (status === "Pending") document.getElementById("card-filter-pending").classList.add("active-filter");
+  else if (status === "In Progress") document.getElementById("card-filter-progress").classList.add("active-filter");
+  else if (status === "Completed") document.getElementById("card-filter-completed").classList.add("active-filter");
+
+  render();
+}
+
+function filterDashboardType(type) {
+  if (activeTypeFilter === type) {
+    activeTypeFilter = "";
+  } else {
+    activeTypeFilter = type;
+    
+    if(currentUser === "it") {
+      if(type === "IT Ticket") {
+        switchItDashboardTab("helpdesk");
+      } else if(type === "Onboarding" || type === "Offboarding" || type === "Transfer") {
+        switchItDashboardTab("hr");
+      }
+    }
+  }
+
+  document.getElementById("type-filter-onboard").classList.remove("active-filter");
+  document.getElementById("type-filter-offboard").classList.remove("active-filter");
+  document.getElementById("type-filter-transfer").classList.remove("active-filter");
+  document.getElementById("type-filter-tickets").classList.remove("active-filter");
+
+  if (activeTypeFilter === "Onboarding") document.getElementById("type-filter-onboard").classList.add("active-filter");
+  if (activeTypeFilter === "Offboarding") document.getElementById("type-filter-offboard").classList.add("active-filter");
+  if (activeTypeFilter === "Transfer") document.getElementById("type-filter-transfer").classList.add("active-filter");
+  if (activeTypeFilter === "IT Ticket") document.getElementById("type-filter-tickets").classList.add("active-filter");
+
+  updateResetButtonVisibility();
+  render();
+}
+
+function toggleDeptChartFilter(deptName) {
+  if (activeDeptChartFilter === deptName) {
+    activeDeptChartFilter = "";
+  } else {
+    activeDeptChartFilter = deptName;
+    if(currentItActiveViewTab !== "helpdesk") switchItDashboardTab("helpdesk");
+  }
+  updateResetButtonVisibility();
+  generateLiveCharts();
+  render();
+}
+
+function toggleIssueChartFilter(issueName) {
+  if (activeIssueChartFilter === issueName) {
+    activeIssueChartFilter = "";
+  } else {
+    activeIssueChartFilter = issueName;
+    if(currentItActiveViewTab !== "helpdesk") switchItDashboardTab("helpdesk");
+  }
+  updateResetButtonVisibility();
+  generateLiveCharts();
+  render();
+}
+
+function resetAllChartFilters() {
+  activeTypeFilter = "";
+  activeDeptChartFilter = "";
+  activeIssueChartFilter = "";
+  
+  document.getElementById("type-filter-onboard").classList.remove("active-filter");
+  document.getElementById("type-filter-offboard").classList.remove("active-filter");
+  document.getElementById("type-filter-transfer").classList.remove("active-filter");
+  document.getElementById("type-filter-tickets").classList.remove("active-filter");
+
+  updateResetButtonVisibility();
+  generateLiveCharts();
+  render();
+}
+
+function updateResetButtonVisibility() {
+  const btn = document.getElementById("clearChartFiltersBtn");
+  if(btn) {
+    if(activeTypeFilter || activeDeptChartFilter || activeIssueChartFilter) {
+      btn.classList.remove("hidden");
+    } else {
+      btn.classList.add("hidden");
+    }
+  }
+}
+
+function getRoleScopedData() {
+  if (currentUser === "hr") {
+    return data.filter(item => item.type !== "IT Ticket");
+  } else {
+    return data;
+  }
+}
+
+function calculateMetrics() {
+  const scopedData = getRoleScopedData();
+  const total = scopedData.length;
+  const pending = scopedData.filter(item => item.status === "Pending").length;
+  const progress = scopedData.filter(item => item.status === "In Progress").length;
+  const completed = scopedData.filter(item => item.status === "Completed").length;
+
+  document.getElementById("metric-total").innerText = total;
+  document.getElementById("metric-pending").innerText = pending;
+  document.getElementById("metric-progress").innerText = progress;
+  document.getElementById("metric-completed").innerText = completed;
+
+  const pctP = total ? Math.round((pending / total) * 100) : 0;
+  const pctPr = total ? Math.round((progress / total) * 100) : 0;
+  const pctC = total ? Math.round((completed / total) * 100) : 0;
+
+  document.getElementById("pct-pending").innerText = `${pctP}% of total`;
+  document.getElementById("pct-progress").innerText = `${pctPr}% of total`;
+  document.getElementById("pct-completed").innerText = `${pctC}% of total`;
+
+  if (currentUser === "it") {
+    document.getElementById("type-count-onboard").innerText = data.filter(item => item.type === "Onboarding").length;
+    document.getElementById("type-count-offboard").innerText = data.filter(item => item.type === "Offboarding").length;
+    document.getElementById("type-count-transfer").innerText = data.filter(item => item.type === "Transfer").length;
+    document.getElementById("type-count-tickets").innerText = data.filter(item => item.type === "IT Ticket").length;
+    generateLiveCharts();
+  }
+}
+
+function generateLiveCharts() {
+  const tickets = data.filter(item => item.type === "IT Ticket");
+  
+  const deptMap = {};
+  ["Sales", "Operations", "Collections", "Finance", "HR", "Audit", "Compliance", "Commercial", "Risk", "Others"].forEach(d => deptMap[d] = 0);
+  tickets.forEach(t => {
+    if(t.clientDept && deptMap[t.clientDept] !== undefined) {
+      deptMap[t.clientDept]++;
+    }
+  });
+
+  const issueMap = {};
+  ["Hardware", "Software", "Printer", "Telephone", "Email", "Finpower", "Network", "Other"].forEach(i => issueMap[i] = 0);
+  
+  tickets.forEach(t => {
+    if(t.dept) {
+      if (t.dept.startsWith("Other")) {
+        issueMap["Other"]++;
+      } else if (issueMap[t.dept] !== undefined) {
+        issueMap[t.dept]++;
+      } else {
+        issueMap["Other"]++;
+      }
+    }
+  });
+
+  let deptHtml = "";
+  const maxDeptCount = Math.max(...Object.values(deptMap), 1);
+  for (const [key, val] of Object.entries(deptMap)) {
+    const pct = (val / maxDeptCount) * 100;
+    const isSelected = activeDeptChartFilter === key ? "active-chart-filter" : "";
+    deptHtml += `
+      <div class="chart-bar-row ${isSelected}" onclick="toggleDeptChartFilter('${key}')">
+        <div class="chart-bar-label" title="${key}">${key}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill dept-fill" style="width: ${pct}%;"></div>
+        </div>
+        <div class="chart-bar-count">${val}</div>
+      </div>
+    `;
+  }
+  document.getElementById("deptChartContainer").innerHTML = deptHtml;
+
+  let issueHtml = "";
+  const maxIssueCount = Math.max(...Object.values(issueMap), 1);
+  for (const [key, val] of Object.entries(issueMap)) {
+    const pct = (val / maxIssueCount) * 100;
+    const isSelected = activeIssueChartFilter === key ? "active-chart-filter" : "";
+    issueHtml += `
+      <div class="chart-bar-row ${isSelected}" onclick="toggleIssueChartFilter('${key}')">
+        <div class="chart-bar-label" title="${key}">${key}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill issue-fill" style="width: ${pct}%;"></div>
+        </div>
+        <div class="chart-bar-count">${val}</div>
+      </div>
+    `;
+  }
+  document.getElementById("issueChartContainer").innerHTML = issueHtml;
+}
+
+function resetForms() {
+  editId = null;
+  
+  document.getElementById("n_name").value = "";
+  document.getElementById("n_dept_select").value = "Sales";
+  document.getElementById("n_job").value = "";
+  document.getElementById("n_start").value = "";
+  document.getElementById("n_email_toggle").value = "No";
+  document.getElementById("n_email_val").value = "";
+  document.getElementById("n_email_box").classList.add("hidden");
+  document.getElementById("n_finpower").value = "No";
+  document.getElementById("n_folder_toggle").value = "No";
+  document.getElementById("n_folder_val").value = "";
+  document.getElementById("n_folder_box").classList.add("hidden");
+  document.getElementById("n_software_toggle").value = "No";
+  document.getElementById("n_software_name").value = "";
+  document.getElementById("n_software_reason").value = "";
+  document.getElementById("n_software_box").classList.add("hidden");
+  document.getElementById("n_notes").value = "";
+  
+  document.getElementById("o_name").value = "";
+  document.getElementById("o_dept_select").value = "Sales";
+  document.getElementById("o_last").value = "";
+  document.getElementById("o_notes").value = "";
+
+  document.getElementById("t_name").value = "";
+  document.getElementById("t_from_select").value = "Sales";
+  document.getElementById("t_to_select").value = "Sales";
+  document.getElementById("t_notes").value = "";
+
+  document.querySelectorAll(".status-view-only").forEach(el => el.innerText = "Pending");
+  document.getElementById("form-title-onboard").innerText = "Onboarding";
+  document.getElementById("form-title-offboard").innerText = "Offboarding";
+  document.getElementById("form-title-transfer").innerText = "Transfer";
+}
+
+function saveDataPayload(type) {
+  let payload = { id: editId || Date.now(), type: type, status: "Pending" };
+
+  if (type === "Onboarding") {
+    payload.name = document.getElementById("n_name").value.trim();
+    payload.dept = document.getElementById("n_dept_select").value;
+    payload.job = document.getElementById("n_job").value.trim();
+    payload.date = document.getElementById("n_start").value;
+    payload.emailToggle = document.getElementById("n_email_toggle").value;
+    payload.emailVal = document.getElementById("n_email_val").value.trim();
+    payload.finpower = document.getElementById("n_finpower").value;
+    payload.folderToggle = document.getElementById("n_folder_toggle").value;
+    payload.folderVal = document.getElementById("n_folder_val").value.trim();
+    payload.softwareToggle = document.getElementById("n_software_toggle").value;
+    payload.softwareName = document.getElementById("n_software_name").value.trim();
+    payload.softwareReason = document.getElementById("n_software_reason").value.trim();
+    payload.notes = document.getElementById("n_notes").value.trim();
+  } else if (type === "Offboarding") {
+    payload.name = document.getElementById("o_name").value.trim();
+    payload.dept = document.getElementById("o_dept_select").value;
+    payload.date = document.getElementById("o_last").value;
+    payload.notes = document.getElementById("o_notes").value.trim();
+  } else if (type === "Transfer") {
+    payload.name = document.getElementById("t_name").value.trim();
+    payload.fromDept = document.getElementById("t_from_select").value;
+    payload.toDept = document.getElementById("t_to_select").value;
+    payload.dept = `${payload.fromDept} → ${payload.toDept}`;
+    payload.notes = document.getElementById("t_notes").value.trim();
+  }
+
+  if (!payload.name) {
+    alert("❌ Please provide a name.");
+    return;
+  }
+
+  if (editId) {
+    const originalRecord = data.find(item => item.id === editId);
+    if (originalRecord) payload.status = originalRecord.status;
+    data = data.map(item => item.id === editId ? payload : item);
+  } else {
+    data.push(payload);
+  }
+
+  localStorage.setItem("emp", JSON.stringify(data));
+  showPopup();
+  resetForms();
+  calculateMetrics();
+  render();
+}
+
+function showPopup() {
+  const popup = document.getElementById("popup");
+  popup.style.display = "block";
+  setTimeout(() => { popup.style.display = "none"; }, 2000);
+}
+
+function deleteRecord(id) {
+  if (confirm("Remove this record completely?")) {
+    data = data.filter(item => item.id !== id);
+    localStorage.setItem("emp", JSON.stringify(data));
+    calculateMetrics();
+    render();
+    if (selectedInspectionId === id) closeDetailsPanel();
+  }
+}
+
+function editRecord(id) {
+  const item = data.find(i => i.id === id);
+  if (!item) return;
+
+  editId = item.id;
+  window.scrollTo({ top: document.getElementById("mainDashboardForms").offsetTop, behavior: "smooth" });
+
+  if (item.type === "Onboarding") {
+    showFormTab('onboard', document.getElementById('tab-onboard'));
+    document.getElementById("form-title-onboard").innerText = "Edit Onboarding Profile Record";
+    document.getElementById("n_name").value = item.name || "";
+    document.getElementById("n_dept_select").value = item.dept || "Sales";
+    document.getElementById("n_job").value = item.job || "";
+    document.getElementById("n_start").value = item.date || "";
+    document.getElementById("n_email_toggle").value = item.emailToggle || "No";
+    document.getElementById("n_email_val").value = item.emailVal || "";
+    toggleConditionalField('n_email_box', item.emailToggle);
+    document.getElementById("n_finpower").value = item.finpower || "No";
+    document.getElementById("n_folder_toggle").value = item.folderToggle || "No";
+    document.getElementById("n_folder_val").value = item.folderVal || "";
+    toggleConditionalField('n_folder_box', item.folderToggle);
+    document.getElementById("n_software_toggle").value = item.softwareToggle || "No";
+    document.getElementById("n_software_name").value = item.softwareName || "";
+    document.getElementById("n_software_reason").value = item.softwareReason || "";
+    toggleConditionalField('n_software_box', item.softwareToggle);
+    document.getElementById("n_notes").value = item.notes || "";
+  } else if (item.type === "Offboarding") {
+    showFormTab('offboard', document.getElementById('tab-offboard'));
+    document.getElementById("form-title-offboard").innerText = "Edit Offboarding Profile Record";
+    document.getElementById("o_name").value = item.name || "";
+    document.getElementById("o_dept_select").value = item.dept || "Sales";
+    document.getElementById("o_last").value = item.date || "";
+    document.getElementById("o_notes").value = item.notes || "";
+  } else if (item.type === "Transfer") {
+    showFormTab('transfer', document.getElementById('tab-transfer'));
+    document.getElementById("form-title-transfer").innerText = "Edit Transfer Profile Record";
+    document.getElementById("t_name").value = item.name || "";
+    document.getElementById("t_from_select").value = item.fromDept || "Sales";
+    document.getElementById("t_to_select").value = item.toDept || "Sales";
+    document.getElementById("t_notes").value = item.notes || "";
+  }
+
+  document.querySelectorAll(".status-view-only").forEach(el => el.innerText = item.status);
+}
+
+function inspectRecord(id) {
+  selectedInspectionId = id;
+  const item = data.find(i => i.id === id);
+  if (!item) return;
+
+  document.getElementById("mainDashboardForms").classList.add("hidden");
+  document.getElementById("standardDashboardTableContainer").classList.add("hidden");
+  document.getElementById("itHelpdeskIsolatedContainer").classList.add("hidden");
+  document.getElementById("itHrIsolatedContainer").classList.add("hidden");
+  
+  document.getElementById("globalInspectionCard").classList.remove("hidden");
+  document.getElementById("it-tag-type").innerText = item.type;
+  
+  if (currentUser === "it") {
+    document.getElementById("itStatusQuickBox").classList.remove("hidden");
+    document.getElementById("it-target-name").innerText = item.name;
+    document.getElementById("it_status_select").value = item.status;
+  } else {
+    document.getElementById("itStatusQuickBox").classList.add("hidden");
+  }
+
+  const grid = document.getElementById("itInspectionGrid");
+  grid.innerHTML = "";
+
+  let fields = [
+    { label: "Target Profile Subject Name", val: item.name || "N/A" },
+    { label: "Operation Flow Group", val: item.type || "N/A" },
+    { label: "Deployment Current Status", val: item.status || "Pending", badge: true }
+  ];
+
+  if (item.type === "Onboarding") {
+    fields.push(
+      { label: "Operational Department", val: item.dept || "N/A" },
+      { label: "Assigned Job Title", val: item.job || "N/A" },
+      { label: "Official Start Target Date", val: item.date || "N/A" },
+      { label: "Corporate Email Generation Requested?", val: item.emailToggle || "No", isCheck: true },
+      { label: "Requested Target Email Handle", val: item.emailVal || "N/A" },
+      { label: "Finpower Production Database Access Needed?", val: item.finpower || "No", isCheck: true },
+      { label: "Network Share Folder Target Link Requested?", val: item.folderToggle || "No", isCheck: true },
+      { label: "Folder Directory Handle Name", val: item.folderVal || "N/A" },
+      { label: "Additional Software Installation Package Required?", val: item.softwareToggle || "No", isCheck: true },
+      { label: "Software Package Name Listing", val: item.softwareName || "N/A" },
+      { label: "Business Production Justification Arguments", val: item.softwareReason || "N/A" }
+    );
+  } else if (item.type === "Offboarding") {
+    fields.push(
+      { label: "Exit Operations Department", val: item.dept || "N/A" },
+      { label: "Official Last Working Target Date", val: item.date || "N/A" }
+    );
+  } else if (item.type === "Transfer") {
+    fields.push(
+      { label: "Origin Base Department Structure", val: item.fromDept || "N/A" },
+      { label: "Target Destination Department Structure", val: item.toDept || "N/A" }
+    );
+  } else if (item.type === "IT Ticket") {
+    fields.push(
+      { label: "Submitter Registered Contact Email", val: item.email || "N/A" },
+      { label: "Originating Department", val: item.clientDept || "N/A" },
+      { label: "Reported Incident Subcategory", val: item.dept || "N/A" },
+      { label: "Priority Escalation Tier Level", val: item.priority || "Low", isPriority: true }
+    );
+  }
+
+  fields.push({ label: "Notes / Operational Tracking Block", val: item.notes || "No notes appended.", fullWidth: true });
+
+  fields.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "inspect-card";
+    if (f.fullWidth) card.className += " inspect-full-row";
+    
+    let html = `<span class="inspect-label">${f.label}</span>`;
+    
+    if (f.badge) {
+      let badgeClass = `badge-${f.val.toLowerCase().replace(" ", "-")}`;
+      html += `<div style="margin-top:4px;"><span class="badge ${badgeClass}">${f.val}</span></div>`;
+    } else if (f.isCheck) {
+      let tagClass = f.val === "Yes" ? "yes" : "no";
+      html += `<span class="inspect-badge ${tagClass}">${f.val}</span>`;
+    } else if (f.isPriority) {
+      let badgeClass = `badge-${f.val.toLowerCase()}`;
+      html += `<div style="margin-top:4px;"><span class="badge ${badgeClass}">${f.val}</span></div>`;
+    } else if (f.fullWidth) {
+      html += `<div class="notes-block">${f.val.replace(/\n/g, "<br>")}</div>`;
+    } else {
+      html += `<span class="inspect-val">${f.val}</span>`;
+    }
+    
+    card.innerHTML = html;
+    grid.appendChild(card);
+  });
+}
+
+function closeDetailsPanel() {
+  selectedInspectionId = null;
+  document.getElementById("globalInspectionCard").add("hidden");
+  
+  if (currentUser === "hr") {
+    document.getElementById("mainDashboardForms").classList.remove("hidden");
+    document.getElementById("standardDashboardTableContainer").classList.remove("hidden");
+  } else {
+    document.getElementById("mainDashboardForms").classList.remove("hidden");
+    switchItDashboardTab(currentItActiveViewTab);
+  }
+}
+
+function saveItStatus() {
+  if (!selectedInspectionId) return;
+  const item = data.find(i => i.id === selectedInspectionId);
+  if (!item) return;
+
+  item.status = document.getElementById("it_status_select").value;
+  localStorage.setItem("emp", JSON.stringify(data));
+  showPopup();
+  calculateMetrics();
+  inspectRecord(selectedInspectionId); 
+}
+
+function render() {
+  const searchKeyword = document.getElementById("search").value.toLowerCase().trim();
+  const scopedData = getRoleScopedData();
+  
+  let filteredData = scopedData.filter(item => {
+    const matchSearch = item.name.toLowerCase().includes(searchKeyword) || 
+                        (item.dept && item.dept.toLowerCase().includes(searchKeyword));
+    
+    const matchStatus = activeStatusFilter === "" || item.status === activeStatusFilter;
+    const matchType = activeTypeFilter === "" || item.type === activeTypeFilter;
+    
+    let matchDeptChart = true;
+    let matchIssueChart = true;
+    
+    if (item.type === "IT Ticket") {
+      if (activeDeptChartFilter !== "") {
+        matchDeptChart = item.clientDept === activeDeptChartFilter;
+      }
+      if (activeIssueChartFilter !== "") {
+        if (activeIssueChartFilter === "Other") {
+          matchIssueChart = item.dept.startsWith("Other");
+        } else {
+          matchIssueChart = item.dept === activeIssueChartFilter;
+        }
+      }
+    } else {
+      if (activeDeptChartFilter !== "" || activeIssueChartFilter !== "") {
+        return false;
+      }
+    }
+    
+    return matchSearch && matchStatus && matchType && matchDeptChart && matchIssueChart;
+  });
+
+  if (currentUser === "hr") {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+    
+    filteredData.forEach(item => {
+      const tr = document.createElement("tr");
+      let statusBadge = `badge-${item.status.toLowerCase().replace(" ", "-")}`;
+      
+      tr.innerHTML = `
+        <td><span class="selectable-name" onclick="inspectRecord(${item.id})">${item.name}</span></td>
+        <td><span class="badge badge-low" style="background:#f1f5f9; color:#334155;">${item.type}</span></td>
+        <td>${item.dept || 'N/A'}</td>
+        <td>${item.date || 'N/A'}</td>
+        <td><span class="badge ${statusBadge}">${item.status}</span></td>
+        <td>
+          <button class="action-btn edit" onclick="editRecord(${item.id})">Edit</button>
+          <button class="action-btn delete" onclick="deleteRecord(${item.id})">Delete</button>
+        </td>
+      `;
+      list.appendChild(tr);
+    });
+  } 
+  else if (currentUser === "it") {
+    const helpdeskList = document.getElementById("itHelpdeskTicketList");
+    const hrTaskList = document.getElementById("itHrTaskList");
+    
+    helpdeskList.innerHTML = "";
+    hrTaskList.innerHTML = "";
+
+    filteredData.forEach(item => {
+      let statusBadge = `badge-${item.status.toLowerCase().replace(" ", "-")}`;
+      
+      if (item.type === "IT Ticket") {
+        const tr = document.createElement("tr");
+        let priorityBadge = `badge-${item.priority.toLowerCase()}`;
+        tr.innerHTML = `
+          <td><span class="selectable-name" onclick="inspectRecord(${item.id})">${item.name}</span></td>
+          <td><span class="badge badge-low" style="background:#f1f5f9; color:#475569;">${item.clientDept || 'General'}</span></td>
+          <td><strong>${item.dept || 'Other'}</strong></td>
+          <td><span class="badge ${priorityBadge}">${item.priority}</span></td>
+          <td><span class="badge ${statusBadge}">${item.status}</span></td>
+          <td>
+            <button class="action-btn print" onclick="inspectRecord(${item.id})">Inspect Pipeline</button>
+          </td>
+        `;
+        helpdeskList.appendChild(tr);
+      } else {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="selectable-name" onclick="inspectRecord(${item.id})">${item.name}</span></td>
+          <td><span class="badge badge-low" style="background:#e0f2fe; color:#0369a1;">${item.type}</span></td>
+          <td>${item.dept || 'N/A'}</td>
+          <td>${item.date || 'Immediate'}</td>
+          <td><span class="badge ${statusBadge}">${item.status}</span></td>
+          <td>
+            <button class="action-btn print" onclick="inspectRecord(${item.id})">Manage Deployment</button>
+          </td>
+        `;
+        hrTaskList.appendChild(tr);
+      }
+    });
+  }
+}
+</script>
 </body>
 </html>
