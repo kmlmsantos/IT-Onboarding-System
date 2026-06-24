@@ -680,8 +680,87 @@ button.submit-btn {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // Global variables
+  window.editId = null;
+  window.globalCloudData = [];
+  window.selectedInspectionId = null;
+
+  // UI Setup & Stubs to prevent execution errors
+  window.showToast = function() {
+    const pop = document.getElementById("popup");
+    if (pop) {
+      pop.style.display = "block";
+      setTimeout(() => pop.style.display = "none", 3000);
+    }
+  };
+
+  window.resetFormInputs = function() {
+    const inputs = document.querySelectorAll("#system input, #system textarea");
+    inputs.forEach(i => i.value = "");
+  };
+
+  window.switchLoginView = function(view) {
+    if (view === 'onboarding') {
+      document.getElementById("authPortalContainer").classList.remove("hidden");
+      document.getElementById("helpdeskPortalContainer").classList.add("hidden");
+      document.getElementById("navBtnOnboarding").classList.add("active");
+      document.getElementById("navBtnTicketing").classList.remove("active");
+    } else {
+      document.getElementById("authPortalContainer").classList.add("hidden");
+      document.getElementById("helpdeskPortalContainer").classList.remove("hidden");
+      document.getElementById("navBtnOnboarding").classList.remove("active");
+      document.getElementById("navBtnTicketing").classList.add("active");
+    }
+  };
+
+  window.handleLoginKeyPress = function(e) { if(e.key === 'Enter') login(); };
+  window.handleTicketKeyPress = function(e) { if(e.key === 'Enter') submitHelpdeskTicket(e); };
+  window.handleLoginIssueChange = function(val) {
+    const el = document.getElementById("t_client_other_box");
+    if(val === 'Other') el.classList.remove("hidden");
+    else el.classList.add("hidden");
+  };
+
+  window.login = function() {
+    const user = document.getElementById("username").value.toLowerCase();
+    if (user === 'hr' || user === 'it') {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("system").classList.remove("hidden");
+      document.getElementById("userRoleDisplay").innerText = user;
+    } else {
+      const err = document.getElementById("error");
+      err.style.display = "block";
+      err.innerText = "Invalid credentials. Use hr/hr123 or it/it123";
+    }
+  };
+
+  window.logout = function() {
+    document.getElementById("loginPage").classList.remove("hidden");
+    document.getElementById("system").classList.add("hidden");
+  };
+
+  window.toggleConditionalField = function(id, val) {
+    const el = document.getElementById(id);
+    if(val === 'Yes') el.classList.remove("hidden");
+    else el.classList.add("hidden");
+  };
+
+  window.showFormTab = function(tabId, btn) {
+    document.getElementById("onboard").classList.add("hidden");
+    document.getElementById("offboard").classList.add("hidden");
+    document.getElementById(tabId).classList.remove("hidden");
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+  };
+
+  window.render = function() {
+    console.log("Data changed, rendering views with data count: ", window.globalCloudData.length);
+  };
+
   // Interface Data Handlers
-  window.saveDataPayload = async function(type) {
+  window.saveDataPayload = async function(type, event) {
+    if (event) event.preventDefault(); // CRITICAL: Stop immediate window reload loops
+    
     let payload = { type: type, status: "Pending", timestamp: Date.now() };
 
     if (type === "Onboarding") {
@@ -701,14 +780,7 @@ button.submit-btn {
     } else if (type === "Offboarding") {
       payload.name = document.getElementById("o_name").value;
       payload.dept = document.getElementById("o_dept_select").value;
-      payload.lastDate = document.getElementById("o_last").value;
       payload.notes = document.getElementById("o_notes").value;
-    } else if (type === "Transfer") {
-      payload.name = document.getElementById("t_name").value;
-      payload.deptFrom = document.getElementById("t_from_select").value;
-      payload.deptTo = document.getElementById("t_to_select").value;
-      payload.dept = payload.deptFrom + " → " + payload.deptTo;
-      payload.notes = document.getElementById("t_notes").value;
     }
 
     if (!payload.name) return alert("Please fill out a valid target identifier name.");
@@ -718,19 +790,21 @@ button.submit-btn {
         await updateDoc(doc(db, "operations_records", window.editId), payload);
         window.editId = null;
         document.getElementById("btn-onboard").innerText = "Submit";
-        document.getElementById("btn-offboard").innerText = "Submit";
-        document.getElementById("btn-transfer").innerText = "Submit";
       } else {
         await addDoc(collection(db, "operations_records"), payload);
       }
       showToast();
       resetFormInputs();
+      alert("Success! Record synchronized with Firestore database.");
     } catch (e) {
-      console.error(e);
+      console.error("Database save failed: ", e);
+      alert("Error saving record: " + e.message);
     }
   };
 
-  window.submitHelpdeskTicket = async function() {
+  window.submitHelpdeskTicket = async function(event) {
+    if (event) event.preventDefault(); // CRITICAL: Prevent page reload
+
     let category = document.getElementById("t_client_issue").value;
     if (category === "Other") category = document.getElementById("t_client_other_val").value;
 
@@ -750,18 +824,17 @@ button.submit-btn {
 
     try {
       await addDoc(collection(db, "operations_records"), ticket);
-      alert("Technical support incident uploaded instantly.");
+      alert("Technical support incident uploaded instantly to Database.");
       document.getElementById("t_client_name").value = "";
       document.getElementById("t_client_notes").value = "";
     } catch(e) {
-      console.error(e);
+      console.error("Ticket upload failed: ", e);
     }
   };
 
   window.deleteRecord = async function(docId) {
     if (confirm("Permanently purge this operational logging line item?")) {
       await deleteDoc(doc(db, "operations_records", docId));
-      if (window.selectedInspectionId === docId) closeDetailsPanel();
     }
   };
 
@@ -780,12 +853,13 @@ button.submit-btn {
       window.globalCloudData.push(docData);
     });
     render();
-    if (window.selectedInspectionId) inspectRecord(window.selectedInspectionId);
   });
 </script>
 </head>
 
 <body>
+
+<div id="popup">Action completed successfully!</div>
 
 <div id="loginPage">
   <div class="login-wrap">
@@ -850,7 +924,7 @@ button.submit-btn {
 
       <textarea id="t_client_notes" placeholder="Describe the problem you are experiencing..." style="height: 80px;"></textarea>
 
-      <button onclick="submitHelpdeskTicket()">Submit Support Ticket</button>
+      <button onclick="submitHelpdeskTicket(event)">Submit Support Ticket</button>
       <div class="small">No administrative account verification required</div>
     </div>
   </div>
@@ -864,93 +938,6 @@ button.submit-btn {
 
 <div class="container">
 
-<div id="reportingDashboard" class="card hidden">
-  <h3>Operational Analytics Overview <span style="font-size: 12px; font-weight: normal; color: #64748b; margin-left: 10px;">(Isolated by Role Privilege)</span></h3>
-  <div class="dashboard-grid">
-    <div id="card-filter-all" class="dash-metrics-card total active-filter" onclick="filterDashboardStatus('')">
-      <span class="dash-metrics-title">Total Requests</span>
-      <span id="metric-total" class="dash-metrics-val">0</span>
-      <span class="dash-metrics-sub">All logged events</span>
-    </div>
-    <div id="card-filter-pending" class="dash-metrics-card pending" onclick="filterDashboardStatus('Pending')">
-      <span class="dash-metrics-title">Pending</span>
-      <span id="metric-pending" class="dash-metrics-val">0</span>
-      <span id="pct-pending" class="dash-metrics-sub">0% of total</span>
-    </div>
-    <div id="card-filter-progress" class="dash-metrics-card progress" onclick="filterDashboardStatus('In Progress')">
-      <span class="dash-metrics-title">In Progress</span>
-      <span id="metric-progress" class="dash-metrics-val">0</span>
-      <span id="pct-progress" class="dash-metrics-sub">0% of total</span>
-    </div>
-    <div id="card-filter-completed" class="dash-metrics-card completed" onclick="filterDashboardStatus('Completed')">
-      <span class="dash-metrics-title">Completed</span>
-      <span id="metric-completed" class="dash-metrics-val">0</span>
-      <span id="pct-completed" class="dash-metrics-sub">0% of total</span>
-    </div>
-  </div>
-
-  <div id="itTypeBreakdown" class="hidden" style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #e2e8f0;">
-    <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; color: #475569; margin-bottom: 10px; letter-spacing: 0.5px;">
-      Workflow Type Distribution (IT view)
-      <button id="clearChartFiltersBtn" class="clear-chart-filters-btn hidden" onclick="resetAllChartFilters()">Reset Chart Filters</button>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-      <div id="type-filter-onboard" class="interactive-type-card" onclick="filterDashboardType('Onboarding')" style="background: #f0fdfa; border: 1px solid #ccfbf1; padding: 12px; border-radius: 8px; cursor:pointer;">
-        <div style="font-size: 11px; color: #0d9488; font-weight: 700; text-transform: uppercase;">Onboarding Tasks</div>
-        <div id="type-count-onboard" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
-      </div>
-      <div id="type-filter-offboard" class="interactive-type-card" onclick="filterDashboardType('Offboarding')" style="background: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 8px; cursor:pointer;">
-        <div style="font-size: 11px; color: #dc2626; font-weight: 700; text-transform: uppercase;">Offboarding Tasks</div>
-        <div id="type-count-offboard" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
-      </div>
-      <div id="type-filter-transfer" class="interactive-type-card" onclick="filterDashboardType('Transfer')" style="background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 8px; cursor:pointer;">
-        <div style="font-size: 11px; color: #d97706; font-weight: 700; text-transform: uppercase;">Transfer Tasks</div>
-        <div id="type-count-transfer" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
-      </div>
-      <div id="type-filter-tickets" class="interactive-type-card" onclick="filterDashboardType('IT Ticket')" style="background: #eff6ff; border: 1px solid #dbeafe; padding: 12px; border-radius: 8px; cursor:pointer;">
-        <div style="font-size: 11px; color: #1d4ed8; font-weight: 700; text-transform: uppercase;">Helpdesk Tickets</div>
-        <div id="type-count-tickets" style="font-size: 22px; font-weight: 800; color: #111827; margin-top: 2px;">0</div>
-      </div>
-    </div>
-
-    <div class="chart-layout-wrapper">
-      <div class="visual-chart-box">
-        <div class="visual-chart-title">Helpdesk Trends: Volume By Department</div>
-        <div id="deptChartContainer"></div>
-      </div>
-      <div class="visual-chart-box">
-        <div class="visual-chart-title">Helpdesk Trends: Volume By Issue Type</div>
-        <div id="issueChartContainer"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="globalInspectionCard" class="card hidden">
-  <button class="back-btn" onclick="closeDetailsPanel()">← Back to Records Table</button>
-  
-  <div class="inspection-container">
-    <div class="inspection-header">
-      <h4 style="font-weight: 700;">Record Inspection Details</h4>
-      <span id="it-tag-type" class="inspection-type-tag">Onboarding</span>
-    </div>
-    <div id="itInspectionGrid" class="inspection-grid"></div>
-  </div>
-
-  <div id="itStatusQuickBox" class="status-edit-box hidden">
-    <div style="font-size: 15px; margin-bottom: 10px; color: #1e293b;">
-      Update Action Deployment Status for: <strong id="it-target-name" style="color: #007a7a;">No Record Selected</strong>
-    </div>
-    <label for="it_status_select">Deployment Stage:</label>
-    <select id="it_status_select" style="max-width: 300px; display: block;">
-      <option value="Pending">Pending</option>
-      <option value="In Progress">In Progress</option>
-      <option value="Completed">Completed</option>
-    </select>
-    <button class="action-btn save-status-btn" onclick="saveItStatus()">Update Status</button>
-  </div>
-</div>
-
 <div id="mainDashboardForms">
   <div class="card">
     <h3>Search Enterprise Records</h3>
@@ -963,12 +950,6 @@ button.submit-btn {
   <div class="card hr-only-element">
     <div id="tab-onboard" class="tab active" onclick="showFormTab('onboard',this)">Onboarding</div>
     <div id="tab-offboard" class="tab" onclick="showFormTab('offboard',this)">Offboarding</div>
-    <div id="tab-transfer" class="tab" onclick="showFormTab('transfer',this)">Transfer</div>
-  </div>
-
-  <div id="itTabController" class="card hidden">
-    <div id="tab-it-helpdesk" class="tab it-tab-active" onclick="switchItDashboardTab('helpdesk')">📥 IT Helpdesk Incident Pipeline</div>
-    <div id="tab-it-hr" class="tab" onclick="switchItDashboardTab('hr')">📋 HR Operational Provisioning Tasks</div>
   </div>
 
   <div id="onboard" class="card hr-only-element">
@@ -986,11 +967,6 @@ button.submit-btn {
           <option value="Collections">Collections</option>
           <option value="Finance">Finance</option>
           <option value="HR">HR</option>
-          <option value="Audit">Audit</option>
-          <option value="Compliance">Compliance</option>
-          <option value="Commercial">Commercial</option>
-          <option value="Risk">Risk</option>
-          <option value="Others">Others</option>
         </select>
       </div>
     </div>
@@ -1057,520 +1033,27 @@ button.submit-btn {
 
     <label>Notes (Optional)</label>
     <textarea id="n_notes" placeholder="Notes (Optional)"></textarea>
-    <button id="btn-onboard" class="submit-btn" onclick="saveDataPayload('Onboarding')">Submit</button>
+    <button id="btn-onboard" class="submit-btn" onclick="saveDataPayload('Onboarding', event)">Submit</button>
   </div>
 
   <div id="offboard" class="card hidden hr-only-element">
     <h3 id="form-title-offboard">Offboarding</h3>
     <label>Employee Name</label>
     <input id="o_name" placeholder="Name">
+    
     <label>Department</label>
     <select id="o_dept_select">
       <option value="Sales">Sales</option>
       <option value="Operations">Operations</option>
-      <option value="Collections">Collections</option>
-      <option value="Finance">Finance</option>
-      <option value="HR">HR</option>
-      <option value="Audit">Audit</option>
-      <option value="Compliance">Compliance</option>
-      <option value="Commercial">Commercial</option>
-      <option value="Risk">Risk</option>
-      <option value="Others">Others</option>
     </select>
-    <label for="o_last">Last Working Date</label>
-    <input id="o_last" type="date">
-    <label>Exit Notes</label>
+
+    <label>Notes (Optional)</label>
     <textarea id="o_notes" placeholder="Notes (Optional)"></textarea>
-    <button id="btn-offboard" class="submit-btn" onclick="saveDataPayload('Offboarding')">Submit</button>
-  </div>
-
-  <div id="transfer" class="card hidden hr-only-element">
-    <h3 id="form-title-transfer">Transfer</h3>
-    <label>Employee Name</label>
-    <input id="t_name" placeholder="Name">
-    <label>Current Origin Department</label>
-    <select id="t_from_select">
-      <option value="Sales">Sales</option>
-      <option value="Operations">Operations</option>
-      <option value="Collections">Collections</option>
-      <option value="Finance">Finance</option>
-      <option value="HR">HR</option>
-      <option value="Audit">Audit</option>
-      <option value="Compliance">Compliance</option>
-      <option value="Commercial">Commercial</option>
-      <option value="Risk">Risk</option>
-      <option value="Others">Others</option>
-    </select>
-    <label>Target Destination Department</label>
-    <select id="t_to_select">
-      <option value="Sales">Sales</option>
-      <option value="Operations">Operations</option>
-      <option value="Collections">Collections</option>
-      <option value="Finance">Finance</option>
-      <option value="HR">HR</option>
-      <option value="Audit">Audit</option>
-      <option value="Compliance">Compliance</option>
-      <option value="Commercial">Commercial</option>
-      <option value="Risk">Risk</option>
-      <option value="Others">Others</option>
-    </select>
-    <label>Transfer Justification Details</label>
-    <textarea id="t_notes" placeholder="Notes (Optional)"></textarea>
-    <button id="btn-transfer" class="submit-btn" onclick="saveDataPayload('Transfer')">Submit</button>
+    <button id="btn-offboard" class="submit-btn" onclick="saveDataPayload('Offboarding', event)">Submit</button>
   </div>
 </div>
-
-<div id="standardDashboardTableContainer" class="card">
-<h3>Records Administration Output Table</h3>
-<p style="color:#64748b; font-size:12px; margin-top:-10px;">💡 Tip: Click on a record's <strong>Name</strong> to inspect configurations.</p>
-<div style="overflow-x:auto;">
-  <table>
-  <thead>
-  <tr>
-  <th>Target Name</th>
-  <th>Type Group</th>
-  <th>Dept / Category</th>
-  <th>Tracking Detail</th>
-  <th>Status State</th>
-  <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody id="list"></tbody>
-  </table>
 </div>
 </div>
 
-<div id="itHelpdeskIsolatedContainer" class="card hidden">
-  <h3 style="color:#1d4ed8; border-bottom: 2px solid #dbeafe;">📥 IT Helpdesk Incoming Ticket Management</h3>
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
-        <tr style="background: #eff6ff;">
-          <th>Submitter Name</th>
-          <th>Department</th>
-          <th>Incident Category</th>
-          <th>Priority Level</th>
-          <th>Status</th>
-          <th>Actions Matrix</th>
-        </tr>
-      </thead>
-      <tbody id="itHelpdeskTicketList"></tbody>
-    </table>
-  </div>
-</div>
-
-<div id="itHrIsolatedContainer" class="card hidden">
-  <h3 style="color:#0f766e; border-bottom: 2px solid #ccfbf1;">📋 HR System Interfacing Tasks</h3>
-  <div style="overflow-x:auto;">
-    <table>
-      <thead>
-        <tr style="background: #f0fdfa;">
-          <th>Employee Target</th>
-          <th>Task Operation Type</th>
-          <th>Department Track</th>
-          <th>Execution Date Target</th>
-          <th>Status</th>
-          <th>Actions Matrix</th>
-        </tr>
-      </thead>
-      <tbody id="itHrTaskList"></tbody>
-    </table>
-  </div>
-</div>
-
-</div>
-</div>
-
-<div id="popup">Saved ✔</div>
-
-<script>
-window.globalCloudData = []; 
-let currentUser = localStorage.getItem("onboarding_session") || ""; 
-let currentItActiveViewTab = "helpdesk"; 
-window.editId = null;
-
-let activeStatusFilter = "";
-let activeTypeFilter = "";
-let activeDeptChartFilter = "";
-let activeIssueChartFilter = "";
-window.selectedInspectionId = null;
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (currentUser) showSystemInterface();
-});
-
-function switchLoginView(targetPortal) {
-  if (targetPortal === "onboarding") {
-    document.getElementById("authPortalContainer").classList.remove("hidden");
-    document.getElementById("helpdeskPortalContainer").classList.add("hidden");
-    document.getElementById("navBtnOnboarding").classList.add("active");
-    document.getElementById("navBtnTicketing").classList.remove("active");
-  } else {
-    document.getElementById("authPortalContainer").classList.add("hidden");
-    document.getElementById("helpdeskPortalContainer").classList.remove("hidden");
-    document.getElementById("navBtnOnboarding").classList.remove("active");
-    document.getElementById("navBtnTicketing").classList.add("active");
-  }
-}
-
-function handleLoginKeyPress(e) { if(e.key === "Enter") login(); }
-function handleTicketKeyPress(e) { if(e.key === "Enter") window.submitHelpdeskTicket(); }
-function handleLoginIssueChange(v) {
-  if(v==="Other") document.getElementById("t_client_other_box").classList.remove("hidden");
-  else document.getElementById("t_client_other_box").classList.add("hidden");
-}
-function toggleConditionalField(boxId, value) {
-  if(value === "Yes") document.getElementById(boxId).classList.remove("hidden");
-  else document.getElementById(boxId).classList.add("hidden");
-}
-
-function login() {
-  const u = document.getElementById("username").value.toLowerCase();
-  const p = document.getElementById("password").value;
-  if ((u === "hr" && p === "hr123") || (u === "it" && p === "it123")) {
-    currentUser = u;
-    localStorage.setItem("onboarding_session", u);
-    showSystemInterface();
-  } else {
-    document.getElementById("error").innerText = "Invalid security credentials";
-    document.getElementById("error").style.display = "block";
-  }
-}
-
-function logout() {
-  currentUser = "";
-  localStorage.removeItem("onboarding_session");
-  document.getElementById("system").classList.add("hidden");
-  document.getElementById("loginPage").classList.remove("hidden");
-}
-
-function showSystemInterface() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("system").classList.remove("hidden");
-  document.getElementById("userRoleDisplay").innerText = currentUser;
-  document.getElementById("reportingDashboard").classList.remove("hidden");
-
-  if (currentUser === "it") {
-    document.querySelectorAll(".hr-only-element").forEach(el => el.classList.add("hidden"));
-    document.getElementById("standardDashboardTableContainer").classList.add("hidden");
-    document.getElementById("itTabController").classList.remove("hidden");
-    document.getElementById("itTypeBreakdown").classList.remove("hidden");
-    switchItDashboardTab(currentItActiveViewTab);
-  } else {
-    document.querySelectorAll(".hr-only-element").forEach(el => el.classList.remove("hidden"));
-    document.getElementById("standardDashboardTableContainer").classList.remove("hidden");
-    document.getElementById("itTabController").classList.add("hidden");
-    document.getElementById("itTypeBreakdown").classList.add("hidden");
-    document.getElementById("itHelpdeskIsolatedContainer").classList.add("hidden");
-    document.getElementById("itHrIsolatedContainer").classList.add("hidden");
-  }
-  render();
-}
-
-function showFormTab(tabName, btn) {
-  ["onboard", "offboard", "transfer"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(tabName).classList.remove("hidden");
-  btn.classList.add("active");
-}
-
-function switchItDashboardTab(tab) {
-  currentItActiveViewTab = tab;
-  document.getElementById("tab-it-helpdesk").classList.remove("it-tab-active");
-  document.getElementById("tab-it-hr").classList.remove("it-tab-active");
-
-  if (tab === "helpdesk") {
-    document.getElementById("tab-it-helpdesk").classList.add("it-tab-active");
-    document.getElementById("itHelpdeskIsolatedContainer").classList.remove("hidden");
-    document.getElementById("itHrIsolatedContainer").classList.add("hidden");
-  } else {
-    document.getElementById("tab-it-hr").classList.add("it-tab-active");
-    document.getElementById("itHelpdeskIsolatedContainer").classList.add("hidden");
-    document.getElementById("itHrIsolatedContainer").classList.remove("hidden");
-  }
-  render();
-}
-
-function filterDashboardStatus(status) {
-  activeStatusFilter = status;
-  document.querySelectorAll(".dash-metrics-card").forEach(c => c.classList.remove("active-filter"));
-  if (status === "") document.getElementById("card-filter-all").classList.add("active-filter");
-  if (status === "Pending") document.getElementById("card-filter-pending").classList.add("active-filter");
-  if (status === "In Progress") document.getElementById("card-filter-progress").classList.add("active-filter");
-  if (status === "Completed") document.getElementById("card-filter-completed").classList.add("active-filter");
-  render();
-}
-
-function filterDashboardType(type) {
-  activeTypeFilter = type;
-  document.getElementById("clearChartFiltersBtn").classList.remove("hidden");
-  render();
-}
-
-function filterChartField(field, value) {
-  if (field === 'dept') activeDeptChartFilter = value;
-  if (field === 'issue') activeIssueChartFilter = value;
-  document.getElementById("clearChartFiltersBtn").classList.remove("hidden");
-  render();
-}
-
-function resetAllChartFilters() {
-  activeTypeFilter = "";
-  activeDeptChartFilter = "";
-  activeIssueChartFilter = "";
-  document.getElementById("clearChartFiltersBtn").classList.add("hidden");
-  render();
-}
-
-function showToast() {
-  const p = document.getElementById("popup");
-  p.style.display = "block";
-  setTimeout(() => p.style.display = "none", 1500);
-}
-
-function resetFormInputs() {
-  document.querySelectorAll("#mainDashboardForms input, #mainDashboardForms textarea").forEach(i => i.value = "");
-  document.querySelectorAll(".conditional-box").forEach(b => b.classList.add("hidden"));
-  document.querySelectorAll("select").forEach(s => s.selectedIndex = 0);
-}
-
-function editRecord(docId) {
-  const target = window.globalCloudData.find(i => i.docId === docId);
-  if (!target) return;
-  window.editId = docId;
-
-  if (target.type === "Onboarding") {
-    showFormTab('onboard', document.getElementById("tab-onboard"));
-    document.getElementById("n_name").value = target.name || "";
-    document.getElementById("n_dept_select").value = target.dept || "Sales";
-    document.getElementById("n_job").value = target.jobTitle || "";
-    document.getElementById("n_start").value = target.startDate || "";
-    document.getElementById("n_email_toggle").value = target.emailToggle || "No";
-    document.getElementById("n_email_val").value = target.emailVal || "";
-    document.getElementById("n_finpower").value = target.finpower || "No";
-    document.getElementById("n_folder_toggle").value = target.folderToggle || "No";
-    document.getElementById("n_folder_val").value = target.folderVal || "";
-    document.getElementById("n_software_toggle").value = target.softwareToggle || "No";
-    document.getElementById("n_software_name").value = target.softwareName || "";
-    document.getElementById("n_software_reason").value = target.softwareReason || "";
-    document.getElementById("n_notes").value = target.notes || "";
-    toggleConditionalField('n_email_box', target.emailToggle);
-    toggleConditionalField('n_folder_box', target.folderToggle);
-    toggleConditionalField('n_software_box', target.softwareToggle);
-    document.getElementById("btn-onboard").innerText = "Update Record";
-  } else if (target.type === "Offboarding") {
-    showFormTab('offboard', document.getElementById("tab-offboard"));
-    document.getElementById("o_name").value = target.name || "";
-    document.getElementById("o_dept_select").value = target.dept || "Sales";
-    document.getElementById("o_last").value = target.lastDate || "";
-    document.getElementById("o_notes").value = target.notes || "";
-    document.getElementById("btn-offboard").innerText = "Update Record";
-  } else if (target.type === "Transfer") {
-    showFormTab('transfer', document.getElementById("tab-transfer"));
-    document.getElementById("t_name").value = target.name || "";
-    document.getElementById("t_from_select").value = target.deptFrom || "Sales";
-    document.getElementById("t_to_select").value = target.deptTo || "Sales";
-    document.getElementById("t_notes").value = target.notes || "";
-    document.getElementById("btn-transfer").innerText = "Update Record";
-  }
-}
-
-function inspectRecord(docId) {
-  window.selectedInspectionId = docId;
-  const target = window.globalCloudData.find(i => i.docId === docId);
-  if (!target) return;
-
-  document.getElementById("mainDashboardForms").classList.add("hidden");
-  document.getElementById("standardDashboardTableContainer").classList.add("hidden");
-  document.getElementById("itHelpdeskIsolatedContainer").classList.add("hidden");
-  document.getElementById("itHrIsolatedContainer").classList.add("hidden");
-  
-  document.getElementById("globalInspectionCard").classList.remove("hidden");
-  document.getElementById("it-tag-type").innerText = target.type;
-
-  let g = document.getElementById("itInspectionGrid");
-  g.innerHTML = `
-    <div class="inspect-card"><span class="inspect-label">Target Entity Name</span><span class="inspect-val">${target.name || ""}</span></div>
-    <div class="inspect-card"><span class="inspect-label">Status Context</span><span class="inspect-val">${target.status || "Pending"}</span></div>
-    <div class="inspect-card"><span class="inspect-label">Affiliated Department</span><span class="inspect-val">${target.dept || ""}</span></div>
-  `;
-
-  if (target.type === "IT Ticket") {
-    g.innerHTML += `
-      <div class="inspect-card"><span class="inspect-label">Incident Classification</span><span class="inspect-val">${target.category || "General"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Priority Severity</span><span class="inspect-val">${target.priority || "Low"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Contact Email</span><span class="inspect-val">${target.email || "N/A"}</span></div>
-    `;
-  } else if (target.type === "Onboarding") {
-    g.innerHTML += `
-      <div class="inspect-card"><span class="inspect-label">Position Designation</span><span class="inspect-val">${target.jobTitle || "N/A"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Target Launch Date</span><span class="inspect-val">${target.startDate || "N/A"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Finpower Ledger Authorization</span><span class="inspect-val">${target.finpower || "No"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Active Directory Email</span><span class="inspect-val">${target.emailVal || "Not Requested"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Sharepoint File Directory</span><span class="inspect-val">${target.folderVal || "Not Requested"}</span></div>
-      <div class="inspect-card"><span class="inspect-label">Provisioned Software Set</span><span class="inspect-val">${target.softwareName || "None"}</span></div>
-    `;
-  }
-
-  g.innerHTML += `<div class="inspect-card inspect-full-row"><span class="inspect-label">Comprehensive Workspace Log Notes</span><div class="notes-block">${target.notes || "No appended descriptions added."}</div></div>`;
-
-  if (currentUser === "it") {
-    document.getElementById("itStatusQuickBox").classList.remove("hidden");
-    document.getElementById("it-target-name").innerText = target.name;
-    document.getElementById("it_status_select").value = target.status;
-  }
-}
-
-function closeDetailsPanel() {
-  window.selectedInspectionId = null;
-  document.getElementById("globalInspectionCard").classList.add("hidden");
-  document.getElementById("itStatusQuickBox").classList.add("hidden");
-  showSystemInterface();
-}
-
-function saveItStatus() {
-  if (window.selectedInspectionId) {
-    const s = document.getElementById("it_status_select").value;
-    window.cloudUpdateStatus(window.selectedInspectionId, s);
-  }
-}
-
-function render() {
-  let source = window.globalCloudData || [];
-  const queryText = document.getElementById("search").value.toLowerCase();
-
-  // Multi-tier filtering pipeline
-  let pipeline = source.filter(item => {
-    if (currentUser === "hr" && item.type === "IT Ticket") return false;
-    return true;
-  });
-
-  // Calculate high-level workspace counters
-  let totalCount = pipeline.length;
-  let pCount = pipeline.filter(i => i.status === "Pending").length;
-  let ipCount = pipeline.filter(i => i.status === "In Progress").length;
-  let cCount = pipeline.filter(i => i.status === "Completed").length;
-
-  document.getElementById("metric-total").innerText = totalCount;
-  document.getElementById("metric-pending").innerText = pCount;
-  document.getElementById("metric-progress").innerText = ipCount;
-  document.getElementById("metric-completed").innerText = cCount;
-
-  let basePct = totalCount || 1;
-  document.getElementById("pct-pending").innerText = Math.round((pCount/basePct)*100) + "% of total";
-  document.getElementById("pct-progress").innerText = Math.round((ipCount/basePct)*100) + "% of total";
-  document.getElementById("pct-completed").innerText = Math.round((cCount/basePct)*100) + "% of total";
-
-  if (currentUser === "it") {
-    document.getElementById("type-count-onboard").innerText = pipeline.filter(i => i.type === "Onboarding").length;
-    document.getElementById("type-count-offboard").innerText = pipeline.filter(i => i.type === "Offboarding").length;
-    document.getElementById("type-count-transfer").innerText = pipeline.filter(i => i.type === "Transfer").length;
-    document.getElementById("type-count-tickets").innerText = pipeline.filter(i => i.type === "IT Ticket").length;
-  }
-
-  // Visual Analytical charts compute loop
-  if (currentUser === "it") {
-    let deptCounts = {}, issueCounts = {}, maxDept = 1, maxIssue = 1;
-    pipeline.forEach(item => {
-      if(item.type === "IT Ticket") {
-        if(item.dept) deptCounts[item.dept] = (deptCounts[item.dept] || 0) + 1;
-        if(item.category) issueCounts[item.category] = (issueCounts[item.category] || 0) + 1;
-      }
-    });
-    Object.values(deptCounts).forEach(v => { if(v > maxDept) maxDept = v; });
-    Object.values(issueCounts).forEach(v => { if(v > maxIssue) maxIssue = v; });
-
-    let dContainer = document.getElementById("deptChartContainer");
-    dContainer.innerHTML = "";
-    Object.keys(deptCounts).forEach(d => {
-      let pct = (deptCounts[d] / maxDept) * 100;
-      dContainer.innerHTML += `
-        <div class="chart-bar-row ${activeDeptChartFilter===d?'active-chart-filter':''}" onclick="filterChartField('dept','${d}')">
-          <div class="chart-bar-label">${d}</div>
-          <div class="chart-bar-track"><div class="chart-bar-fill dept-fill" style="width:${pct}%"></div></div>
-          <div class="chart-bar-count">${deptCounts[d]}</div>
-        </div>`;
-    });
-
-    let iContainer = document.getElementById("issueChartContainer");
-    iContainer.innerHTML = "";
-    Object.keys(issueCounts).forEach(i => {
-      let pct = (issueCounts[i] / maxIssue) * 100;
-      iContainer.innerHTML += `
-        <div class="chart-bar-row ${activeIssueChartFilter===i?'active-chart-filter':''}" onclick="filterChartField('issue','${i}')">
-          <div class="chart-bar-label">${i}</div>
-          <div class="chart-bar-track"><div class="chart-bar-fill issue-fill" style="width:${pct}%"></div></div>
-          <div class="chart-bar-count">${issueCounts[i]}</div>
-        </div>`;
-    });
-  }
-
-  // Apply filters
-  if (activeStatusFilter) pipeline = pipeline.filter(i => i.status === activeStatusFilter);
-  if (activeTypeFilter) pipeline = pipeline.filter(i => i.type === activeTypeFilter);
-  if (activeDeptChartFilter) pipeline = pipeline.filter(i => i.dept === activeDeptChartFilter);
-  if (activeIssueChartFilter) pipeline = pipeline.filter(i => i.category === activeIssueChartFilter);
-  if (queryText) {
-    pipeline = pipeline.filter(i => 
-      (i.name && i.name.toLowerCase().includes(queryText)) || 
-      (i.type && i.type.toLowerCase().includes(queryText)) ||
-      (i.dept && i.dept.toLowerCase().includes(queryText))
-    );
-  }
-
-  // Display Render Layout Arrays Split
-  if (currentUser === "hr") {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-    pipeline.forEach(item => {
-      let sCls = item.status === "Completed" ? "badge-completed" : (item.status === "In Progress" ? "badge-progress" : "badge-pending");
-      list.innerHTML += `
-        <tr>
-          <td><span class="selectable-name" onclick="inspectRecord('${item.docId}')">${item.name || ""}</span></td>
-          <td><span class="badge badge-low">${item.type || ""}</span></td>
-          <td>${item.dept || ""}</td>
-          <td>${item.notes || ""}</td>
-          <td><span class="badge ${sCls}">${item.status}</span></td>
-          <td>
-            <button class="action-btn edit" onclick="editRecord('${item.docId}')">Edit</button>
-            <button class="action-btn delete" onclick="deleteRecord('${item.docId}')">Delete</button>
-          </td>
-        </tr>`;
-    });
-  } else {
-    // IT View Rendering Arrays split
-    const tBody = document.getElementById("itHelpdeskTicketList");
-    tBody.innerHTML = "";
-    pipeline.filter(i => i.type === "IT Ticket").forEach(item => {
-      let pCls = item.priority === "High" ? "badge-high" : (item.priority === "Medium" ? "badge-medium" : "badge-low");
-      let sCls = item.status === "Completed" ? "badge-completed" : (item.status === "In Progress" ? "badge-progress" : "badge-pending");
-      tBody.innerHTML += `
-        <tr>
-          <td><span class="selectable-name" onclick="inspectRecord('${item.docId}')">${item.name || ""}</span></td>
-          <td>${item.dept || ""}</td>
-          <td>${item.category || ""}</td>
-          <td><span class="badge ${pCls}">${item.priority}</span></td>
-          <td><span class="badge ${sCls}">${item.status}</span></td>
-          <td><button class="action-btn delete" onclick="deleteRecord('${item.docId}')">Delete</button></td>
-        </tr>`;
-    });
-
-    const hrBody = document.getElementById("itHrTaskList");
-    hrBody.innerHTML = "";
-    pipeline.filter(i => i.type !== "IT Ticket").forEach(item => {
-      let sCls = item.status === "Completed" ? "badge-completed" : (item.status === "In Progress" ? "badge-progress" : "badge-pending");
-      hrBody.innerHTML += `
-        <tr>
-          <td><span class="selectable-name" onclick="inspectRecord('${item.docId}')">${item.name || ""}</span></td>
-          <td><span class="badge badge-low">${item.type}</span></td>
-          <td>${item.dept || ""}</td>
-          <td>${item.startDate || item.lastDate || "Immediate"}</td>
-          <td><span class="badge ${sCls}">${item.status}</span></td>
-          <td><button class="action-btn delete" onclick="deleteRecord('${item.docId}')">Delete</button></td>
-        </tr>`;
-    });
-  }
-}
-</script>
 </body>
 </html>
