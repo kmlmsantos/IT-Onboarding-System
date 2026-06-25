@@ -1074,11 +1074,39 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
-<script>
-const users = { hr:"hr123", it:"it123" };
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-localStorage.removeItem("emp");
-let data = [];
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyB8W5E7zM-ig0leEVWLXYNNamJjZLQV5Ro",
+    authDomain: "enterprise-service-management.firebaseapp.com",
+    projectId: "enterprise-service-management",
+    storageBucket: "enterprise-service-management.firebasestorage.app",
+    messagingSenderId: "769928761949",
+    appId: "1:769928761949:web:a737d929b5454a5a7573b4",
+    measurementId: "G-PQXS40JP45"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+// Initialize connection
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ... Keep the rest of the saveDataPayload() and fetchLiveFirebaseRecords() functions here ...
+</script>
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
 let currentItActiveViewTab = "helpdesk"; 
