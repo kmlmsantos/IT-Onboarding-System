@@ -1078,7 +1078,7 @@ button.submit-btn {
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // 2. Your exact Firebase project web app configuration keys
+  // Global App Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyB8W5E7zM-ig0leEVWLXYNNamJjZLQV5Ro",
     authDomain: "enterprise-service-management.firebaseapp.com",
@@ -1089,19 +1089,105 @@ button.submit-btn {
     measurementId: "G-PQXS40JP45"
   };
 
-  // 3. Initialize Firebase using the standard Compat layer
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  // =========================================================
-  // Keep all the function logic below exactly as it was:
-  // =========================================================
+  // Global variables
   const users = { hr: "hr123", it: "it123" };
   let currentSessionUser = localStorage.getItem("onboarding_session") || ""; 
   let currentItActiveViewTab = "helpdesk"; 
   let editId = null;
+  let db;
+
+  // Initialize App on Window Load to prevent clicking freezing bugs
+  window.onload = function() {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      console.log("Firebase connected successfully!");
+      
+      // Auto login session setup
+      if (currentSessionUser) {
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("system").classList.remove("hidden");
+        fetchLiveFirebaseRecords();
+      }
+    } catch(e) {
+      console.error("Initialization breakdown:", e);
+    }
+  };
+
+  function switchLoginView(type) {
+    if(type === 'onboarding') {
+      document.getElementById('navBtnOnboarding').classList.add('active');
+      document.getElementById('navBtnTicketing').classList.remove('active');
+      document.getElementById('authPortalContainer').classList.remove('hidden');
+      document.getElementById('helpdeskPortalContainer').classList.add('hidden');
+    } else {
+      document.getElementById('navBtnOnboarding').classList.remove('active');
+      document.getElementById('navBtnTicketing').classList.add('active');
+      document.getElementById('authPortalContainer').classList.add('hidden');
+      document.getElementById('helpdeskPortalContainer').classList.remove('hidden');
+    }
+  }
+
+  function toggleConditionalField(targetId, value) {
+    const el = document.getElementById(targetId);
+    if(value === 'Yes') el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  }
+
+  function handleLoginIssueChange(value) {
+    const box = document.getElementById('t_client_other_box');
+    if(value === 'Other') box.classList.remove('hidden');
+    else box.classList.add('hidden');
+  }
+
+  function showFormTab(tab, element) {
+    document.querySelectorAll('.hr-only-element').forEach(el => {
+      if(el.tagName === 'DIV') el.classList.add('hidden');
+    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(tab).classList.remove('hidden');
+    element.classList.add('active');
+  }
+
+  function login() {
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+    if(users[u] && users[u] === p) {
+      localStorage.setItem("onboarding_session", u);
+      document.getElementById("userRoleDisplay").innerText = u;
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("system").classList.remove("hidden");
+      
+      if(u === 'hr') {
+        document.getElementById('reportingDashboard').classList.add('hidden');
+        document.getElementById('itTabController').classList.add('hidden');
+        document.querySelectorAll('.hr-only-element').forEach(el => el.classList.remove('hidden'));
+        document.getElementById('offboard').classList.add('hidden');
+        document.getElementById('transfer').classList.add('hidden');
+      } else if (u === 'it') {
+        document.getElementById('reportingDashboard').classList.remove('hidden');
+        document.getElementById('itTabController').classList.remove('hidden');
+        document.querySelectorAll('.hr-only-element').forEach(el => el.classList.add('hidden'));
+        document.getElementById('itHelpdeskIsolatedContainer').classList.remove('hidden');
+      }
+      fetchLiveFirebaseRecords();
+    } else {
+      const err = document.getElementById("error");
+      err.innerText = "Invalid Administrative Access Credentials.";
+      err.style.display = "block";
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("onboarding_session");
+    document.getElementById("system").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
+  }
 
   function saveDataPayload(typeGroup) {
+    if(!db) { alert("Database connection loading..."); return; }
+    
     let payload = {
       typeGroup: typeGroup,
       statusState: "Pending",
@@ -1126,32 +1212,56 @@ button.submit-btn {
     }
 
     if (!payload.targetName) {
-      alert("Please fill out the required name field.");
+      alert("Please fill out the target name field.");
       return;
     }
 
     db.collection("enterprise_records").add(payload)
-      .then((docRef) => {
+      .then(() => {
         showSuccessPopup();
         clearFormFields(typeGroup);
         fetchLiveFirebaseRecords();
       })
       .catch((error) => {
-        console.error("Firebase write execution blocked: ", error);
+        console.error("Write error:", error);
       });
   }
 
+  function submitHelpdeskTicket() {
+    if(!db) return;
+    let payload = {
+      typeGroup: "IT Ticket",
+      targetName: document.getElementById('t_client_name').value,
+      deptCategory: document.getElementById('t_client_dept').value,
+      trackingDetail: document.getElementById('t_client_issue').value,
+      notes: document.getElementById('t_client_notes').value,
+      statusState: "Pending",
+      timestamp: new Date().getTime()
+    };
+
+    if(payload.trackingDetail === 'Other') {
+      payload.trackingDetail = document.getElementById('t_client_other_val').value;
+    }
+
+    db.collection("enterprise_records").add(payload).then(() => {
+      showSuccessPopup();
+      document.getElementById('t_client_name').value = "";
+      document.getElementById('t_client_notes').value = "";
+    });
+  }
+
   function fetchLiveFirebaseRecords() {
+    if(!db) return;
     db.collection("enterprise_records").orderBy("timestamp", "desc").get()
       .then((querySnapshot) => {
         const listTableBody = document.getElementById("list");
-        listTableBody.innerHTML = ""; 
+        if(listTableBody) listTableBody.innerHTML = ""; 
 
         querySnapshot.forEach((doc) => {
           const record = doc.data();
           const row = `
             <tr>
-              <td><span class="selectable-name">${record.targetName}</span></td>
+              <td><strong>${record.targetName}</strong></td>
               <td><span class="badge badge-low">${record.typeGroup}</span></td>
               <td>${record.deptCategory}</td>
               <td>${record.trackingDetail}</td>
@@ -1161,16 +1271,13 @@ button.submit-btn {
               </td>
             </tr>
           `;
-          listTableBody.innerHTML += row;
+          if(listTableBody) listTableBody.innerHTML += row;
         });
-      })
-      .catch((error) => {
-        console.error("Error reading database collection: ", error);
       });
   }
 
   function deleteRecord(docId) {
-    if(confirm("Confirm deletion of this system file record?")) {
+    if(confirm("Delete this record permanently?")) {
       db.collection("enterprise_records").doc(docId).delete().then(() => {
         fetchLiveFirebaseRecords();
       });
@@ -1189,32 +1296,7 @@ button.submit-btn {
     if(type === 'Transfer') document.getElementById('t_name').value = "";
   }
 
-  function login() {
-    const u = document.getElementById("username").value;
-    const p = document.getElementById("password").value;
-    if(users[u] && users[u] === p) {
-      localStorage.setItem("onboarding_session", u);
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("system").classList.remove("hidden");
-      fetchLiveFirebaseRecords();
-    } else {
-      const err = document.getElementById("error");
-      err.innerText = "Invalid Administrative Access Credentials.";
-      err.style.display = "block";
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem("onboarding_session");
-    document.getElementById("system").classList.add("hidden");
-    document.getElementById("loginPage").classList.remove("hidden");
-  }
-
-  if (currentSessionUser) {
-    document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("system").classList.remove("hidden");
-    fetchLiveFirebaseRecords();
-  }
+  function render() { fetchLiveFirebaseRecords(); }
 </script>
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
