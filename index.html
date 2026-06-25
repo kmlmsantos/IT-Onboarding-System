@@ -1074,15 +1074,11 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+<script>
+  // 2. Your exact Firebase project web app configuration keys
   const firebaseConfig = {
     apiKey: "AIzaSyB8W5E7zM-ig0leEVWLXYNNamJjZLQV5Ro",
     authDomain: "enterprise-service-management.firebaseapp.com",
@@ -1093,9 +1089,132 @@ button.submit-btn {
     measurementId: "G-PQXS40JP45"
   };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  // 3. Initialize Firebase using the standard Compat layer
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // =========================================================
+  // Keep all the function logic below exactly as it was:
+  // =========================================================
+  const users = { hr: "hr123", it: "it123" };
+  let currentSessionUser = localStorage.getItem("onboarding_session") || ""; 
+  let currentItActiveViewTab = "helpdesk"; 
+  let editId = null;
+
+  function saveDataPayload(typeGroup) {
+    let payload = {
+      typeGroup: typeGroup,
+      statusState: "Pending",
+      timestamp: new Date().getTime()
+    };
+
+    if (typeGroup === 'Onboarding') {
+      payload.targetName = document.getElementById('n_name').value;
+      payload.deptCategory = document.getElementById('n_dept_select').value;
+      payload.trackingDetail = document.getElementById('n_job').value;
+      payload.notes = document.getElementById('n_notes').value;
+    } else if (typeGroup === 'Offboarding') {
+      payload.targetName = document.getElementById('o_name').value;
+      payload.deptCategory = document.getElementById('o_dept_select').value;
+      payload.trackingDetail = document.getElementById('o_last').value;
+      payload.notes = document.getElementById('o_notes').value;
+    } else if (typeGroup === 'Transfer') {
+      payload.targetName = document.getElementById('t_name').value;
+      payload.deptCategory = document.getElementById('t_to_select').value;
+      payload.trackingDetail = "From: " + document.getElementById('t_from_select').value;
+      payload.notes = document.getElementById('t_notes').value;
+    }
+
+    if (!payload.targetName) {
+      alert("Please fill out the required name field.");
+      return;
+    }
+
+    db.collection("enterprise_records").add(payload)
+      .then((docRef) => {
+        showSuccessPopup();
+        clearFormFields(typeGroup);
+        fetchLiveFirebaseRecords();
+      })
+      .catch((error) => {
+        console.error("Firebase write execution blocked: ", error);
+      });
+  }
+
+  function fetchLiveFirebaseRecords() {
+    db.collection("enterprise_records").orderBy("timestamp", "desc").get()
+      .then((querySnapshot) => {
+        const listTableBody = document.getElementById("list");
+        listTableBody.innerHTML = ""; 
+
+        querySnapshot.forEach((doc) => {
+          const record = doc.data();
+          const row = `
+            <tr>
+              <td><span class="selectable-name">${record.targetName}</span></td>
+              <td><span class="badge badge-low">${record.typeGroup}</span></td>
+              <td>${record.deptCategory}</td>
+              <td>${record.trackingDetail}</td>
+              <td><span class="badge badge-pending">${record.statusState}</span></td>
+              <td>
+                <button class="action-btn delete" onclick="deleteRecord('${doc.id}')">Delete</button>
+              </td>
+            </tr>
+          `;
+          listTableBody.innerHTML += row;
+        });
+      })
+      .catch((error) => {
+        console.error("Error reading database collection: ", error);
+      });
+  }
+
+  function deleteRecord(docId) {
+    if(confirm("Confirm deletion of this system file record?")) {
+      db.collection("enterprise_records").doc(docId).delete().then(() => {
+        fetchLiveFirebaseRecords();
+      });
+    }
+  }
+
+  function showSuccessPopup() {
+    const popup = document.getElementById("popup");
+    popup.style.display = "block";
+    setTimeout(() => { popup.style.display = "none"; }, 2500);
+  }
+
+  function clearFormFields(type) {
+    if(type === 'Onboarding') document.getElementById('n_name').value = "";
+    if(type === 'Offboarding') document.getElementById('o_name').value = "";
+    if(type === 'Transfer') document.getElementById('t_name').value = "";
+  }
+
+  function login() {
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+    if(users[u] && users[u] === p) {
+      localStorage.setItem("onboarding_session", u);
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("system").classList.remove("hidden");
+      fetchLiveFirebaseRecords();
+    } else {
+      const err = document.getElementById("error");
+      err.innerText = "Invalid Administrative Access Credentials.";
+      err.style.display = "block";
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("onboarding_session");
+    document.getElementById("system").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
+  }
+
+  if (currentSessionUser) {
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("system").classList.remove("hidden");
+    fetchLiveFirebaseRecords();
+  }
 </script>
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
