@@ -1074,9 +1074,6 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
 <script type="module">
   // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -1099,13 +1096,6 @@ button.submit-btn {
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-</script>
-
-// Initialize connection
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ... Keep the rest of the saveDataPayload() and fetchLiveFirebaseRecords() functions here ...
 </script>
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
