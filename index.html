@@ -1074,12 +1074,159 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <script>
-const users = { hr:"hr123", it:"it123" };
+// 2. Paste your exact Firebase project web app configuration here:
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-localStorage.removeItem("emp");
-let data = [];
+// 3. Initialize Firebase 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
+// 4. Portal Variables & State
+const users = { hr: "hr123", it: "it123" };
+let currentSessionUser = localStorage.getItem("onboarding_session") || ""; 
+let currentItActiveViewTab = "helpdesk"; 
+let editId = null;
+
+// ==========================================
+// CORE FIREBASE DATA SAVING OPERATION FUNCTION
+// ==========================================
+function saveDataPayload(typeGroup) {
+  let payload = {
+    typeGroup: typeGroup,
+    statusState: "Pending",
+    timestamp: new Date().getTime()
+  };
+
+  // Collect variables dynamically based on sub-form types
+  if (typeGroup === 'Onboarding') {
+    payload.targetName = document.getElementById('n_name').value;
+    payload.deptCategory = document.getElementById('n_dept_select').value;
+    payload.trackingDetail = document.getElementById('n_job').value;
+    payload.notes = document.getElementById('n_notes').value;
+  } else if (typeGroup === 'Offboarding') {
+    payload.targetName = document.getElementById('o_name').value;
+    payload.deptCategory = document.getElementById('o_dept_select').value;
+    payload.trackingDetail = document.getElementById('o_last').value;
+    payload.notes = document.getElementById('o_notes').value;
+  } else if (typeGroup === 'Transfer') {
+    payload.targetName = document.getElementById('t_name').value;
+    payload.deptCategory = document.getElementById('t_to_select').value;
+    payload.trackingDetail = "From: " + document.getElementById('t_from_select').value;
+    payload.notes = document.getElementById('t_notes').value;
+  }
+
+  if (!payload.targetName) {
+    alert("Please fill out the required name field.");
+    return;
+  }
+
+  // Push directly to Firebase Cloud Collection instead of local temporary arrays
+  db.collection("enterprise_records").add(payload)
+    .then((docRef) => {
+      showSuccessPopup();
+      clearFormFields(typeGroup);
+      fetchLiveFirebaseRecords(); // Refresh display instantly
+    })
+    .catch((error) => {
+      console.error("Firebase write execution blocked: ", error);
+    });
+}
+
+// ==========================================
+// CORE FIREBASE DATA RETRIEVAL FUNCTION (Keeps data visible on login)
+// ==========================================
+function fetchLiveFirebaseRecords() {
+  db.collection("enterprise_records").orderBy("timestamp", "desc").get()
+    .then((querySnapshot) => {
+      const listTableBody = document.getElementById("list");
+      listTableBody.innerHTML = ""; // Clear old visual list elements
+
+      querySnapshot.forEach((doc) => {
+        const record = doc.data();
+        const row = `
+          <tr>
+            <td><span class="selectable-name">${record.targetName}</span></td>
+            <td><span class="badge badge-low">${record.typeGroup}</span></td>
+            <td>${record.deptCategory}</td>
+            <td>${record.trackingDetail}</td>
+            <td><span class="badge badge-pending">${record.statusState}</span></td>
+            <td>
+              <button class="action-btn delete" onclick="deleteRecord('${doc.id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+        listTableBody.innerHTML += row;
+      });
+    })
+    .catch((error) => {
+      console.error("Error reading database collection: ", error);
+    });
+}
+
+// ==========================================
+// CORE FIREBASE DELETE RECORD FUNCTION
+// ==========================================
+function deleteRecord(docId) {
+  if(confirm("Confirm deletion of this system file record?")) {
+    db.collection("enterprise_records").doc(docId).delete().then(() => {
+      fetchLiveFirebaseRecords();
+    });
+  }
+}
+
+// Helper Utilities
+function showSuccessPopup() {
+  const popup = document.getElementById("popup");
+  popup.style.display = "block";
+  setTimeout(() => { popup.style.display = "none"; }, 2500);
+}
+
+function clearFormFields(type) {
+  if(type === 'Onboarding') document.getElementById('n_name').value = "";
+  if(type === 'Offboarding') document.getElementById('o_name').value = "";
+  if(type === 'Transfer') document.getElementById('t_name').value = "";
+}
+
+// Handle Authentication and Session State Rendering 
+function login() {
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
+  if(users[u] && users[u] === p) {
+    localStorage.setItem("onboarding_session", u);
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("system").classList.remove("hidden");
+    fetchLiveFirebaseRecords(); // Fetch data instantly upon successful authentication
+  } else {
+    const err = document.getElementById("error");
+    err.innerText = "Invalid Administrative Access Credentials.";
+    err.style.display = "block";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("onboarding_session");
+  document.getElementById("system").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
+}
+
+// Auto-login checking if window reloads
+if (currentSessionUser) {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("system").classList.remove("hidden");
+  fetchLiveFirebaseRecords();
+}
+</script>
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
 let currentItActiveViewTab = "helpdesk"; 
 let editId = null;
