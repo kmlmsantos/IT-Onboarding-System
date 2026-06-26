@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Enterprise Operations Portal</title>
@@ -1073,7 +1075,13 @@ button.submit-btn {
 </div>
 
 <div id="popup">Saved ✔</div>
-
+// Add this once at the bottom of your code
+async function saveToDatabase(tableName, dataObject) {
+    const { data, error } = await supabase.from(tableName).insert([dataObject]);
+    if (error) console.error("Database Error:", error);
+    else console.log("Saved successfully!");
+}
+    
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
