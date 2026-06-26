@@ -1074,11 +1074,23 @@ button.submit-btn {
 
 <div id="popup">Saved ✔</div>
 
-<script>
-const users = { hr:"hr123", it:"it123" };
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-localStorage.removeItem("emp");
-let data = [];
+const supabaseUrl = 'https://supabase.com/dashboard/project/tkgdpubkqrzpagzdwqpe/settings/api-keys';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZ2RwdWJrcXJ6cGFnemR3cXBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjExMzMsImV4cCI6MjA5Nzk5NzEzM30.m1KiyCXosBbr52n6wQkibS37nMDa3YiEbE-i0ge86wE';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Test the connection
+const { data, error } = await supabase
+  .from('employees')
+  .select('*');
+
+console.log(data);
+console.log(error);
+</script>
+</body>
 
 let currentUser = localStorage.getItem("onboarding_session") || ""; 
 let currentItActiveViewTab = "helpdesk"; 
